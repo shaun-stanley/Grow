@@ -31,6 +31,7 @@
 ## Architecture Rules
 
 - Use native SwiftUI, SwiftData, Swift 5.0, and `@Observable` services injected through `.environment()`.
+- Before implementing Apple platform APIs or behavior, verify current guidance with the Sosumi Apple-docs MCP when it is available. If Sosumi is not exposed in the current session, use official Apple Developer documentation as the fallback source.
 - Keep this as a single Xcode project unless the user asks for modularization.
 - Follow CloudKit-safe SwiftData style: defaults on stored properties, enums stored as raw strings, value structs stored as JSON `Data`, and optional relationships with explicit inverses/delete rules.
 - `PlantSpecies` is a plain `Codable` catalog type loaded from bundled JSON, not a synced SwiftData model.
