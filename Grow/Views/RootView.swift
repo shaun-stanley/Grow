@@ -176,9 +176,6 @@ private struct FirstGrowView: View {
 struct TodayScreen: View {
     var body: some View { JournalPlaceholder(kicker: "The almanac", title: "Today's care", icon: "drop.fill", note: "Your plant's watering, feeding and pH checks — gathered into a calm daily list.") }
 }
-struct CaptureScreen: View {
-    var body: some View { JournalPlaceholder(kicker: "Field notes", title: "Today's photo", icon: "camera.fill", note: "A guided one-tap photo that lines up with yesterday's — the secret behind a buttery time-lapse.") }
-}
 struct ReelsScreen: View {
     var body: some View { JournalPlaceholder(kicker: "The reel", title: "Your grow, in motion", icon: "play.rectangle.fill", note: "Every daily photo, stitched into a shareable time-lapse — automatically.") }
 }
