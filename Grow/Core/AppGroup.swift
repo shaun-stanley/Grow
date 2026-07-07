@@ -6,10 +6,14 @@ import Foundation
 enum AppGroup {
     static let identifier = "group.com.sviftstudios.Grow"
 
+    static var sharedContainerURL: URL? {
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
+    }
+
     /// Root of the shared container, or the app's own documents dir as a fallback
     /// (e.g. before the App Group capability is provisioned).
     static var containerURL: URL {
-        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
+        sharedContainerURL
             ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
