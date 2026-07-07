@@ -47,8 +47,8 @@ final class NotificationService {
         }
     }
 
-    func scheduleCaptureReminder(for grow: Grow, species: PlantSpecies?) async {
-        guard await requestAuthorizationIfNeeded() else { return }
+    func scheduleCaptureReminder(for grow: Grow, species: PlantSpecies?, requestingAuthorization: Bool = false) async {
+        guard await canScheduleNotifications(requestingAuthorization: requestingAuthorization) else { return }
 
         let identifier = captureReminderIdentifier(for: grow)
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
@@ -70,6 +70,21 @@ final class NotificationService {
             #if DEBUG
             print("Grow: capture reminder scheduling failed: \(error)")
             #endif
+        }
+    }
+
+    private func canScheduleNotifications(requestingAuthorization: Bool) async -> Bool {
+        let status = await refreshAuthorizationStatus()
+
+        switch status {
+        case .authorized, .provisional, .ephemeral:
+            return true
+        case .notDetermined:
+            return requestingAuthorization ? await requestAuthorizationIfNeeded() : false
+        case .denied:
+            return false
+        @unknown default:
+            return false
         }
     }
 
