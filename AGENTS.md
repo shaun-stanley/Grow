@@ -54,7 +54,7 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 
 ## Git Workflow
 
-- Work on `codex/...` branches.
-- Open pull requests for review when GitHub auth/network access is available.
-- Do not commit directly to `main` unless the user explicitly asks.
+- Work directly on `main` by default for Codex sessions in this repo.
+- Create `codex/...` branches only when the user explicitly asks for branch-based work or pull-request review.
+- Commit directly to `main` after verification when the requested work is complete.
 - Keep changes scoped to the requested task and do not revert unrelated user changes.
