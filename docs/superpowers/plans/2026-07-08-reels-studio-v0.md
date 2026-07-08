@@ -28,14 +28,17 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 
 ## Living Todo
 
-- [ ] Task 1: Add Reels studio policy and visual contract with focused tests.
-- [ ] Task 2: Extract and polish the Reels studio UI.
+- [x] Task 1: Add Reels studio policy and visual contract with focused tests.
+- [x] Task 2: Extract and polish the Reels studio UI. _(in progress)_
 - [ ] Task 3: Verify share/export behavior and simulator visual quality.
 - [ ] Task 4: Commit and push the verified implementation.
 
 ## Change Log
 
 - 2026-07-08: Initial plan created from approved Reels Studio v0 design spec.
+- 2026-07-08: Started Task 1, adding pure Reels readiness/share policy and visual contract tests.
+- 2026-07-08: Completed Task 1. Added `ReelStudioPolicy`, `ReelStudioVisualContract`, and focused tests for progress, status, share URL eligibility, and anti-slop layout constants. All 7 focused tests passed on iPhone 17 Pro.
+- 2026-07-08: Started Task 2. Extracting Reels views from `RootView.swift` and applying the share-ready studio layout.
 
 ## File Structure
 
