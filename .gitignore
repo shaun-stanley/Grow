@@ -22,3 +22,4 @@ Pods/
 
 # Worktrees / agent scratch
 .worktrees/
+.superpowers/

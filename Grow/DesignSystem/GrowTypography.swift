@@ -1,47 +1,49 @@
 import SwiftUI
 
-/// Grow's editorial type system: a characterful **serif** (New York) for display,
-/// headlines, and big day-numerals — paired with warm **SF Pro Rounded** for UI labels
-/// and body. Plus letter-spaced "field labels" that read like annotations in a seed
-/// catalog. Everything is Dynamic Type-relative.
+/// Grow's type system uses Apple's default system font for every display and UI role.
+/// Text styles stay Dynamic Type-relative, while sizing/weight carry hierarchy.
 enum GrowType {
 
-    // MARK: Serif — editorial voice (New York)
+    // MARK: Display
 
     /// Big hero headline (e.g. "Let's grow something").
-    static func serifTitle(_ weight: Font.Weight = .semibold) -> Font {
-        .system(.largeTitle, design: .serif).weight(weight)
+    static func displayTitle(_ weight: Font.Weight = .semibold) -> Font {
+        .system(.largeTitle, design: .default).weight(weight)
     }
 
-    static func serifHeadline(_ weight: Font.Weight = .semibold) -> Font {
-        .system(.title2, design: .serif).weight(weight)
+    static func displayHeadline(_ weight: Font.Weight = .semibold) -> Font {
+        .system(.title2, design: .default).weight(weight)
     }
 
-    /// Oversized day-counter numeral — the signature editorial moment.
+    /// Oversized day-counter numeral using the same native system family.
     static func numeral(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
-        .system(size: size, weight: weight, design: .serif)
+        .system(size: size, weight: weight, design: .default)
     }
 
-    // MARK: Rounded — friendly UI voice (SF Pro Rounded)
+    static func receiptValue(_ size: CGFloat = 30, weight: Font.Weight = .semibold) -> Font {
+        .system(size: size, weight: weight, design: .default)
+    }
+
+    // MARK: UI
 
     static func title(_ weight: Font.Weight = .semibold) -> Font {
-        .system(.title3, design: .rounded).weight(weight)
+        .system(.title3, design: .default).weight(weight)
     }
 
     static func headline(_ weight: Font.Weight = .semibold) -> Font {
-        .system(.headline, design: .rounded).weight(weight)
+        .system(.headline, design: .default).weight(weight)
     }
 
     static func body(_ weight: Font.Weight = .regular) -> Font {
-        .system(.callout, design: .rounded).weight(weight)
+        .system(.callout, design: .default).weight(weight)
     }
 
     static func callout(_ weight: Font.Weight = .medium) -> Font {
-        .system(.subheadline, design: .rounded).weight(weight)
+        .system(.subheadline, design: .default).weight(weight)
     }
 
     static func caption(_ weight: Font.Weight = .medium) -> Font {
-        .system(.caption, design: .rounded).weight(weight)
+        .system(.caption, design: .default).weight(weight)
     }
 }
 
@@ -54,7 +56,7 @@ extension Text {
     /// A field-journal annotation: tiny, uppercase, letter-spaced, sage.
     func fieldLabel(color: Color = GrowPalette.textSecondary) -> some View {
         self
-            .font(.system(.caption2, design: .rounded).weight(.semibold))
+            .font(.system(.caption2, design: .default).weight(.semibold))
             .textCase(.uppercase)
             .kerning(1.6)
             .foregroundStyle(color)

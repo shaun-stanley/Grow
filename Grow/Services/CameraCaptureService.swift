@@ -47,9 +47,16 @@ final class CameraCaptureService: NSObject {
     private let photoOutput = AVCapturePhotoOutput()
     private let sessionQueue = DispatchQueue(label: "com.sviftstudios.Grow.camera.session")
     private var isConfigured = false
+    private var activeCamera: AVCaptureDevice?
     private var delegates: [Int64: PhotoCaptureDelegate] = [:]
 
     var status: CameraCaptureStatus = .idle
+    var zoomFactor: CGFloat = 1
+    var minZoomFactor: CGFloat = 1
+    var maxZoomFactor: CGFloat = 1
+    var supportsZoom = false
+    var supportsFocusExposureLock = false
+    var isFocusExposureLocked = false
 
     var canCapture: Bool {
         status.isReady
@@ -115,6 +122,65 @@ final class CameraCaptureService: NSObject {
         }
     }
 
+    func setZoomFactor(_ factor: CGFloat) {
+        sessionQueue.async { [weak self] in
+            guard let self, let camera = self.activeCamera else { return }
+
+            let maximum = min(camera.maxAvailableVideoZoomFactor, 4)
+            let clamped = min(max(factor, camera.minAvailableVideoZoomFactor), maximum)
+
+            do {
+                try camera.lockForConfiguration()
+                defer { camera.unlockForConfiguration() }
+                camera.videoZoomFactor = clamped
+                Task { @MainActor in
+                    self.zoomFactor = clamped
+                }
+            } catch {
+                Task { @MainActor in
+                    self.status = .failed("Grow could not adjust zoom.")
+                }
+            }
+        }
+    }
+
+    func toggleFocusExposureLock() {
+        let shouldLock = !isFocusExposureLocked
+
+        sessionQueue.async { [weak self] in
+            guard let self, let camera = self.activeCamera else { return }
+
+            do {
+                try camera.lockForConfiguration()
+                defer { camera.unlockForConfiguration() }
+
+                if shouldLock {
+                    if camera.isFocusModeSupported(.locked) {
+                        camera.focusMode = .locked
+                    }
+                    if camera.isExposureModeSupported(.locked) {
+                        camera.exposureMode = .locked
+                    }
+                } else {
+                    if camera.isFocusModeSupported(.continuousAutoFocus) {
+                        camera.focusMode = .continuousAutoFocus
+                    }
+                    if camera.isExposureModeSupported(.continuousAutoExposure) {
+                        camera.exposureMode = .continuousAutoExposure
+                    }
+                }
+
+                Task { @MainActor in
+                    self.isFocusExposureLocked = shouldLock
+                }
+            } catch {
+                Task { @MainActor in
+                    self.status = .failed("Grow could not lock focus and exposure.")
+                }
+            }
+        }
+    }
+
     private func configureAndStart() {
         status = .configuring
 
@@ -151,6 +217,7 @@ final class CameraCaptureService: NSObject {
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             throw CameraCaptureError.noCamera
         }
+        activeCamera = camera
 
         let input = try AVCaptureDeviceInput(device: camera)
         guard session.canAddInput(input) else {
@@ -163,6 +230,26 @@ final class CameraCaptureService: NSObject {
         }
         session.addOutput(photoOutput)
         photoOutput.maxPhotoQualityPrioritization = .quality
+
+        updateCapabilities(for: camera)
+    }
+
+    private func updateCapabilities(for camera: AVCaptureDevice) {
+        let minimumZoom = camera.minAvailableVideoZoomFactor
+        let maximumZoom = min(camera.maxAvailableVideoZoomFactor, 4)
+        let focusLockSupported = camera.isFocusModeSupported(.locked)
+        let exposureLockSupported = camera.isExposureModeSupported(.locked)
+        let currentlyLocked = camera.focusMode == .locked || camera.exposureMode == .locked
+        let currentZoom = camera.videoZoomFactor
+
+        Task { @MainActor in
+            self.minZoomFactor = minimumZoom
+            self.maxZoomFactor = max(minimumZoom, maximumZoom)
+            self.zoomFactor = min(max(currentZoom, minimumZoom), max(minimumZoom, maximumZoom))
+            self.supportsZoom = maximumZoom > minimumZoom
+            self.supportsFocusExposureLock = focusLockSupported || exposureLockSupported
+            self.isFocusExposureLocked = currentlyLocked
+        }
     }
 }
 

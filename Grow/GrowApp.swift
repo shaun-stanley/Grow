@@ -37,6 +37,13 @@ struct GrowApp: App {
             store.save()
         }
 
+        Self.seedFirstWeekIfRequested(
+            arguments: launchArguments,
+            store: store,
+            catalog: catalog,
+            photoService: photoService
+        )
+
         if launchArguments.contains("-seedSampleCaptures"),
            let grow = store.activeGrows().first,
            (grow.photos ?? []).isEmpty {
@@ -80,5 +87,39 @@ struct GrowApp: App {
                 .tint(GrowPalette.accent)
         }
         .modelContainer(modelContainer)
+    }
+
+    private static func launchValue(after flag: String, in arguments: [String]) -> String? {
+        guard let index = arguments.firstIndex(of: flag), arguments.indices.contains(index + 1) else {
+            return nil
+        }
+        return arguments[index + 1]
+    }
+
+    private static func seedFirstWeekIfRequested(
+        arguments: [String],
+        store: GrowStore,
+        catalog: PlantCatalogService,
+        photoService: PhotoService
+    ) {
+        #if DEBUG
+        guard arguments.contains("-seedFirstWeekGrow") else { return }
+        store.resetDebugSampleData()
+
+        let targetDay = Int(launchValue(after: "-seedFirstWeekDay", in: arguments) ?? "2") ?? 2
+        let clampedDay = min(7, max(1, targetDay))
+        let startDate = Calendar.current.date(byAdding: .day, value: -(clampedDay - 1), to: Date()) ?? Date()
+        let grow = store.createGrow(speciesID: "basil", nickname: "First Week Basil", system: .kratky)
+        grow.startDate = Calendar.current.startOfDay(for: startDate)
+        grow.currentStage = .germination
+
+        let species = catalog.species(id: grow.speciesID)
+        for dayOffset in 0..<max(0, clampedDay - 1) {
+            let captureDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: grow.startDate)?
+                .addingTimeInterval(9 * 60 * 60) ?? Date()
+            _ = photoService.recordPrototypeCapture(for: grow, species: species, capturedAt: captureDate)
+        }
+        store.save()
+        #endif
     }
 }

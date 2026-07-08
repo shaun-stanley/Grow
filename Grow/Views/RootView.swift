@@ -95,7 +95,7 @@ private struct ActiveGrowView: View {
                     Text(species?.latinName ?? "Specimen")
                         .fieldLabel()
                     Text(grow.nickname.isEmpty ? (species?.commonName ?? "My plant") : grow.nickname)
-                        .growStyle(GrowType.serifHeadline())
+                        .growStyle(GrowType.displayHeadline())
                 }
                 Spacer()
                 Text(species?.emoji ?? "🌿").font(.title2)
@@ -170,7 +170,7 @@ private struct FirstGrowView: View {
 
             VStack(alignment: .leading, spacing: GrowSpacing.sm) {
                 Text("Grow something\nfrom almost nothing.")
-                    .growStyle(GrowType.serifTitle())
+                    .growStyle(GrowType.displayTitle())
                     .fixedSize(horizontal: false, vertical: true)
                     .growEntrance(2)
 
@@ -279,7 +279,7 @@ private struct ReelStudio: View {
                 .fieldLabel()
             HStack(alignment: .firstTextBaseline, spacing: GrowSpacing.sm) {
                 Text(displayName)
-                    .growStyle(GrowType.serifHeadline())
+                    .growStyle(GrowType.displayHeadline())
                     .lineLimit(2)
                     .minimumScaleFactor(0.78)
                 Spacer(minLength: GrowSpacing.sm)
@@ -552,7 +552,7 @@ private struct FirstReelEmptyState: View {
         VStack(alignment: .leading, spacing: GrowSpacing.md) {
             Text("The reel").fieldLabel().growEntrance(0)
             Text("Plant first, then motion follows.")
-                .growStyle(GrowType.serifTitle())
+                .growStyle(GrowType.displayTitle())
                 .fixedSize(horizontal: false, vertical: true)
                 .growEntrance(1)
             Hairline().growEntrance(2)
@@ -603,7 +603,7 @@ struct JournalPlaceholder: View {
             PaperBackground(light: 0.4)
             VStack(alignment: .leading, spacing: GrowSpacing.md) {
                 Text(kicker).fieldLabel().growEntrance(0)
-                Text(title).growStyle(GrowType.serifTitle()).growEntrance(1)
+                Text(title).growStyle(GrowType.displayTitle()).growEntrance(1)
                 Hairline().growEntrance(2)
                 HStack(alignment: .top, spacing: GrowSpacing.md) {
                     ZStack {

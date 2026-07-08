@@ -4,11 +4,49 @@ import SwiftData
 import UIKit
 import Vision
 
+enum AlignmentSource: String, Codable, Equatable {
+    case visionTranslation
+    case fallbackEstimate
+    case prototype
+}
+
 struct CaptureAlignment: Codable, Equatable {
     let score: Double
     let xOffset: Double
     let yOffset: Double
     let rotationDegrees: Double
+    let source: AlignmentSource
+
+    init(
+        score: Double,
+        xOffset: Double,
+        yOffset: Double,
+        rotationDegrees: Double,
+        source: AlignmentSource = .fallbackEstimate
+    ) {
+        self.score = score
+        self.xOffset = xOffset
+        self.yOffset = yOffset
+        self.rotationDegrees = rotationDegrees
+        self.source = source
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case score
+        case xOffset
+        case yOffset
+        case rotationDegrees
+        case source
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        score = try container.decode(Double.self, forKey: .score)
+        xOffset = try container.decode(Double.self, forKey: .xOffset)
+        yOffset = try container.decode(Double.self, forKey: .yOffset)
+        rotationDegrees = try container.decode(Double.self, forKey: .rotationDegrees)
+        source = try container.decodeIfPresent(AlignmentSource.self, forKey: .source) ?? .fallbackEstimate
+    }
 
     var percent: Int { Int((score * 100).rounded()) }
 
@@ -18,6 +56,22 @@ struct CaptureAlignment: Codable, Equatable {
         case 0.93...: "steady"
         case 0.88...: "close"
         default: "needs a nudge"
+        }
+    }
+
+    var sourceLabel: String {
+        switch source {
+        case .visionTranslation: "Vision matched"
+        case .fallbackEstimate: "Estimated match"
+        case .prototype: "Simulator match"
+        }
+    }
+
+    var guidanceCopy: String {
+        switch source {
+        case .visionTranslation: "Frame locked from the previous photo"
+        case .fallbackEstimate: "Saved with a steady-angle estimate"
+        case .prototype: "Simulator frame saved for QA"
         }
     }
 }
@@ -36,34 +90,17 @@ struct CaptureReward: Identifiable, Equatable {
     let streak: StreakUpdate
 
     var futureReelProgress: Double {
-        min(1, Double(frameCount) / Double(targetFrameCount))
+        CaptureRewardPolicy.futureReelProgress(frameCount: frameCount, targetFrameCount: targetFrameCount)
     }
 
     var dayTitle: String { "Day \(dayIndex)" }
 
     var milestoneTitle: String? {
-        switch dayIndex {
-        case 1: "Your reel starts here"
-        case 3: "First streak milestone"
-        case 5: "Ahead of the curve"
-        case 7: "First week recap unlocked"
-        default: nil
-        }
+        CaptureRewardPolicy.milestoneTitle(dayIndex: dayIndex)
     }
 
     var firstWeekNote: String? {
-        switch dayIndex {
-        case 1:
-            "The first frame matters because it gives every future leaf a real before."
-        case 2:
-            "No visible change is normal. The reel is already getting steadier."
-        case 3...6:
-            "Quiet growth counts. Keep the angle steady and the reveal will do the talking."
-        case 7:
-            "One week of frames is enough to start seeing the story."
-        default:
-            nil
-        }
+        CaptureRewardPolicy.firstWeekNote(dayIndex: dayIndex)
     }
 }
 
@@ -99,7 +136,7 @@ final class PhotoService {
         photo.localFileName = localFileName
         photo.thumbnailData = thumbnailData(from: image)
         photo.alignmentData = try? encoder.encode(alignment)
-        photo.caption = rewardCaption(dayIndex: dayIndex, alignment: alignment)
+        photo.caption = CaptureRewardPolicy.caption(dayIndex: dayIndex, alignment: alignment)
         photo.isMilestone = CaptureReward(
             photoID: photo.id,
             capturedAt: capturedAt,
@@ -167,7 +204,7 @@ final class PhotoService {
             #endif
         }
         photo.alignmentData = try? encoder.encode(alignment)
-        photo.caption = rewardCaption(dayIndex: dayIndex, alignment: alignment)
+        photo.caption = CaptureRewardPolicy.caption(dayIndex: dayIndex, alignment: alignment)
         photo.isMilestone = CaptureReward(
             photoID: photo.id,
             capturedAt: capturedAt,
@@ -217,13 +254,18 @@ final class PhotoService {
     }
 
     private func prototypeAlignment(frameCount: Int) -> CaptureAlignment {
+        estimatedAlignment(frameCount: frameCount, source: .prototype)
+    }
+
+    private func estimatedAlignment(frameCount: Int, source: AlignmentSource) -> CaptureAlignment {
         let cycle = Double((frameCount * 7) % 12)
         let score = min(0.99, 0.88 + cycle / 100)
         return CaptureAlignment(
             score: score,
             xOffset: Double((frameCount % 5) - 2) * 0.012,
             yOffset: Double(((frameCount + 2) % 5) - 2) * 0.01,
-            rotationDegrees: Double((frameCount % 7) - 3) * 0.15
+            rotationDegrees: Double((frameCount % 7) - 3) * 0.15,
+            source: source
         )
     }
 
@@ -356,7 +398,7 @@ final class PhotoService {
             let currentCGImage = image.cgImage,
             let previousCGImage = previousImage.cgImage
         else {
-            return prototypeAlignment(frameCount: fallbackFrameCount)
+            return estimatedAlignment(frameCount: fallbackFrameCount, source: .fallbackEstimate)
         }
 
         let request = VNTranslationalImageRegistrationRequest(
@@ -369,7 +411,7 @@ final class PhotoService {
         do {
             try handler.perform([request])
             guard let observation = request.results?.first else {
-                return prototypeAlignment(frameCount: fallbackFrameCount)
+                return estimatedAlignment(frameCount: fallbackFrameCount, source: .fallbackEstimate)
             }
 
             let transform = observation.alignmentTransform
@@ -382,10 +424,11 @@ final class PhotoService {
                 score: score,
                 xOffset: normalizedX,
                 yOffset: normalizedY,
-                rotationDegrees: 0
+                rotationDegrees: 0,
+                source: .visionTranslation
             )
         } catch {
-            return prototypeAlignment(frameCount: fallbackFrameCount)
+            return estimatedAlignment(frameCount: fallbackFrameCount, source: .fallbackEstimate)
         }
     }
 
@@ -435,10 +478,6 @@ final class PhotoService {
         AppGroup.containerURL.appendingPathComponent(localFileName)
     }
 
-    private func rewardCaption(dayIndex: Int, alignment: CaptureAlignment) -> String {
-        "\(alignment.percent)% aligned - \(alignment.adjective) Day \(dayIndex) frame"
-    }
-
     private func save() {
         do {
             try context.save()
@@ -471,26 +510,6 @@ enum PhotoServiceError: LocalizedError {
             "Grow could not read that plant photo."
         case .unableToEncodeImage:
             "Grow could not prepare that photo for your timeline."
-        }
-    }
-}
-
-enum ModeledGrowthCurve {
-    static func progress(dayIndex: Int, species: PlantSpecies?) -> Double {
-        let harvestDay = max(21, species?.daysToHarvestMin ?? 35)
-        let raw = Double(max(1, dayIndex)) / Double(harvestDay)
-        let eased = 1 - pow(1 - min(1, raw), 2.2)
-        return min(0.98, max(0.06, eased))
-    }
-
-    static func stage(for progress: Double) -> GrowStage {
-        switch progress {
-        case ..<0.18: .germination
-        case ..<0.35: .seedling
-        case ..<0.68: .vegetative
-        case ..<0.82: .flowering
-        case ..<0.96: .fruiting
-        default: .harvest
         }
     }
 }

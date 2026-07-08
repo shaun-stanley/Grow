@@ -58,6 +58,23 @@ final class GrowStore {
         save()
     }
 
+    #if DEBUG
+    func resetDebugSampleData() {
+        for grow in allGrows() {
+            context.delete(grow)
+        }
+
+        let streakDescriptor = FetchDescriptor<StreakState>()
+        if let states = try? context.fetch(streakDescriptor) {
+            for state in states {
+                context.delete(state)
+            }
+        }
+
+        save()
+    }
+    #endif
+
     func save() {
         do {
             try context.save()

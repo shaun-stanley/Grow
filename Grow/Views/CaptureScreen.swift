@@ -181,8 +181,14 @@ private struct CaptureWorkspace: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: GrowSpacing.md) {
                     captureStage
+
+                    if lastReward != nil {
+                        Color.clear
+                            .frame(height: CaptureRewardVisualContract.rewardScrollLeadIn)
+                            .id(CaptureScrollTarget.reward)
+                    }
+
                     rewardPanel
-                        .id(CaptureScrollTarget.reward)
                     FutureReelStrip(
                         photos: photos,
                         frameCount: capturedFrameCount,
@@ -204,9 +210,9 @@ private struct CaptureWorkspace: View {
             .onChange(of: lastReward?.id) { _, rewardID in
                 guard rewardID != nil else { return }
                 Task { @MainActor in
-                    try? await Task.sleep(nanoseconds: 260_000_000)
+                    try? await Task.sleep(nanoseconds: 620_000_000)
                     withAnimation(.smooth(duration: 0.62)) {
-                        proxy.scrollTo(CaptureScrollTarget.reward, anchor: .center)
+                        proxy.scrollTo(CaptureScrollTarget.reward, anchor: .top)
                     }
                 }
             }
@@ -447,60 +453,102 @@ private struct RewardSequenceView: View {
     @State private var revealStage = 0
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GrowSpacing.md) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Growth memory saved").fieldLabel(color: GrowPalette.sprout600)
-                    Text(reward.dayTitle).growStyle(GrowType.serifHeadline())
-                }
-                Spacer()
-                AlignmentBadge(alignment: reward.alignment)
-            }
-            .rewardStep(revealStage >= 1, reduceMotion: reduceMotion)
+        VStack(alignment: .leading, spacing: 0) {
+            receiptHeader
+                .rewardStep(revealStage >= 1, reduceMotion: reduceMotion)
+
+            ReceiptDivider()
+                .padding(.vertical, CaptureRewardVisualContract.sectionSpacing)
 
             GrowthMemoryCard(reward: reward, isActive: revealStage >= 2, reduceMotion: reduceMotion)
                 .rewardStep(revealStage >= 2, reduceMotion: reduceMotion)
 
-            HStack(spacing: GrowSpacing.md) {
-                TwinAdvanceCard(
-                    progressBefore: reward.modeledProgressBefore,
-                    progressAfter: reward.modeledProgressAfter,
-                    stage: reward.expectedStage,
-                    isActive: revealStage >= 3
-                )
-                .rewardStep(revealStage >= 3, reduceMotion: reduceMotion)
+            ReceiptDivider()
+                .padding(.vertical, CaptureRewardVisualContract.sectionSpacing)
 
-                StreakCard(update: reward.streak, isActive: revealStage >= 4)
-                    .rewardStep(revealStage >= 4, reduceMotion: reduceMotion)
-            }
+            metricGrid
 
             if let firstWeekNote = reward.firstWeekNote {
+                ReceiptDivider()
+                    .padding(.vertical, CaptureRewardVisualContract.sectionSpacing)
                 FirstWeekArcNote(dayIndex: reward.dayIndex, note: firstWeekNote)
                     .rewardStep(revealStage >= 5, reduceMotion: reduceMotion)
             }
 
+            ReceiptDivider()
+                .padding(.vertical, CaptureRewardVisualContract.sectionSpacing)
             MicroRewardCard(moment: RewardMicroMoment(reward: reward))
                 .rewardStep(revealStage >= 6, reduceMotion: reduceMotion)
 
             if let milestone = reward.milestoneTitle {
-                HStack(spacing: GrowSpacing.sm) {
-                    Image(systemName: "sparkles")
-                        .foregroundStyle(GrowPalette.bloom)
-                    Text(milestone)
-                        .growStyle(GrowType.callout(.semibold), color: GrowPalette.textPrimary)
-                    Spacer()
-                }
-                .padding(GrowSpacing.md)
-                .background(GrowPalette.bloom.opacity(0.16), in: RoundedRectangle(cornerRadius: GrowRadius.md, style: .continuous))
-                .rewardStep(revealStage >= 6, reduceMotion: reduceMotion)
+                ReceiptDivider()
+                    .padding(.vertical, CaptureRewardVisualContract.sectionSpacing)
+                MilestoneReceiptRow(title: milestone)
+                    .rewardStep(revealStage >= 6, reduceMotion: reduceMotion)
             }
         }
+        .padding(CaptureRewardVisualContract.receiptPadding)
+        .background(GrowPalette.surface.opacity(0.96), in: RoundedRectangle(cornerRadius: GrowRadius.lg, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: GrowRadius.lg, style: .continuous)
+                .stroke(GrowPalette.separator.opacity(0.82), lineWidth: 1)
+        )
         .sensoryFeedback(.impact, trigger: reward.id)
         .task(id: reward.id) {
             await playSequence()
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Growth memory saved for \(reward.dayTitle)")
+    }
+
+    private var receiptHeader: some View {
+        HStack(alignment: .top, spacing: GrowSpacing.md) {
+            ReceiptHeaderMetric(
+                label: "Memory saved",
+                value: reward.dayTitle,
+                detail: "Frame \(reward.frameCount) saved",
+                tint: GrowPalette.sprout600
+            )
+
+            ReceiptHeaderMetric(
+                label: reward.alignment.sourceLabel,
+                value: "\(reward.alignment.percent)%",
+                suffix: reward.alignment.adjective,
+                detail: reward.alignment.guidanceCopy,
+                tint: GrowPalette.sprout600,
+                isTrailing: true
+            )
+        }
+        .frame(minHeight: CaptureRewardVisualContract.receiptHeaderMinHeight, alignment: .top)
+    }
+
+    private var metricGrid: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: GrowSpacing.sm) {
+                twinCard
+                streakCard
+            }
+
+            VStack(spacing: GrowSpacing.sm) {
+                twinCard
+                streakCard
+            }
+        }
+    }
+
+    private var twinCard: some View {
+        TwinAdvanceCard(
+            progressBefore: reward.modeledProgressBefore,
+            progressAfter: reward.modeledProgressAfter,
+            stage: reward.expectedStage,
+            isActive: revealStage >= 3
+        )
+        .rewardStep(revealStage >= 3, reduceMotion: reduceMotion)
+    }
+
+    private var streakCard: some View {
+        StreakCard(update: reward.streak, isActive: revealStage >= 4)
+            .rewardStep(revealStage >= 4, reduceMotion: reduceMotion)
     }
 
     private func playSequence() async {
@@ -527,21 +575,23 @@ private struct GrowthMemoryCard: View {
     var body: some View {
         HStack(spacing: GrowSpacing.md) {
             ZStack {
-                Circle()
-                    .fill(GrowPalette.sunGlow.opacity(isActive ? 0.32 : 0.16))
-                    .frame(width: 84, height: 84)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(GrowPalette.groundRaised.opacity(isActive ? 0.7 : 0.48))
+                    .frame(width: 74, height: 74)
                 SpecimenJar(
                     progress: reward.modeledProgressAfter,
                     hasBloom: reward.expectedStage.hasBloom,
-                    size: 76
+                    size: 66
                 )
                 .scaleEffect(isActive && !reduceMotion ? 1.06 : 1)
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Saved to the timeline").fieldLabel(color: GrowPalette.sprout600)
+                Text("Timeline saved")
+                    .fieldLabel(color: GrowPalette.sprout600)
+                    .lineLimit(1)
                 Text(reward.dayTitle)
-                    .growStyle(GrowType.serifHeadline())
+                    .growStyle(GrowType.displayHeadline())
                 Text(reward.capturedAt.formatted(date: .abbreviated, time: .omitted))
                     .growStyle(GrowType.caption(), color: GrowPalette.textSecondary)
             }
@@ -550,22 +600,11 @@ private struct GrowthMemoryCard: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(reward.frameCount)")
-                    .growStyle(GrowType.numeral(36), color: GrowPalette.textPrimary)
+                    .growStyle(GrowType.numeral(34), color: GrowPalette.textPrimary)
                 Text("frames").fieldLabel()
             }
         }
-        .padding(GrowSpacing.md)
-        .background(GrowPalette.surface.opacity(0.84), in: RoundedRectangle(cornerRadius: GrowRadius.lg, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: GrowRadius.lg, style: .continuous)
-                .stroke(GrowPalette.separator.opacity(0.78), lineWidth: 1)
-        )
-        .rotation3DEffect(
-            .degrees(isActive || reduceMotion ? 0 : -8),
-            axis: (x: 1, y: 0, z: 0),
-            perspective: 0.7
-        )
-        .shadow(color: GrowPalette.sprout600.opacity(isActive ? 0.12 : 0), radius: 18, y: 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
 }
@@ -575,23 +614,12 @@ private struct FirstWeekArcNote: View {
     let note: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: GrowSpacing.sm) {
-            Image(systemName: dayIndex >= 7 ? "film.stack.fill" : "camera.metering.center.weighted")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(GrowPalette.sprout600)
-                .frame(width: 28, height: 28)
-                .background(GrowPalette.sprout50, in: Circle())
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(dayIndex <= 7 ? "First-week frame" : "Frame note")
-                    .fieldLabel(color: GrowPalette.sprout600)
-                Text(note)
-                    .growStyle(GrowType.callout(), color: GrowPalette.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(.top, GrowSpacing.xs)
-        .accessibilityElement(children: .combine)
+        ReceiptInfoRow(
+            icon: dayIndex >= 7 ? "film.stack.fill" : "camera.metering.center.weighted",
+            title: dayIndex <= 7 ? "First-week frame" : "Frame note",
+            body: note,
+            tint: GrowPalette.sprout600
+        )
     }
 }
 
@@ -602,45 +630,11 @@ private struct RewardMicroMoment {
     let tint: Color
 
     init(reward: CaptureReward) {
-        switch reward.dayIndex {
-        case 1:
-            title = "Reel seed planted"
-            body = "The before-frame is now anchored. Every future leaf has somewhere to return to."
-            icon = "record.circle"
-            tint = GrowPalette.bloom
-        case 2:
-            title = "Germination is mostly invisible"
-            body = "Today is about roots, moisture, and patience. The twin moves so the habit has a pulse."
-            icon = "water.waves"
-            tint = GrowPalette.info
-        case 3:
-            title = "First streak marker"
-            body = "Three steady frames is the first real signal that this grow has a rhythm."
-            icon = "flame.fill"
-            tint = GrowPalette.bloom
-        case 5:
-            title = "Ahead of the average beginner"
-            body = "Most first grows lose consistency here. Five frames means your recap already has structure."
-            icon = "chart.line.uptrend.xyaxis"
-            tint = GrowPalette.sprout600
-        case 7:
-            title = "First-week recap ready"
-            body = "Seven frames is enough to make the quiet first week feel like a story."
-            icon = "film.stack.fill"
-            tint = GrowPalette.bloom
-        default:
-            if reward.alignment.score >= 0.96 {
-                title = "Frame locked"
-                body = "That alignment will make the future time-lapse feel calmer and more cinematic."
-                icon = "scope"
-                tint = GrowPalette.sprout600
-            } else {
-                title = "Memory banked"
-                body = "Even imperfect frames count. The reel gets stronger because the day was captured."
-                icon = "checkmark.seal.fill"
-                tint = GrowPalette.healthy
-            }
-        }
+        let moment = CaptureRewardPolicy.microMoment(for: reward)
+        title = moment.title
+        body = moment.body
+        icon = moment.icon
+        tint = moment.tintRole.color
     }
 }
 
@@ -648,27 +642,12 @@ private struct MicroRewardCard: View {
     let moment: RewardMicroMoment
 
     var body: some View {
-        HStack(alignment: .top, spacing: GrowSpacing.sm) {
-            Image(systemName: moment.icon)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(moment.tint)
-                .frame(width: 30, height: 30)
-                .background(moment.tint.opacity(0.13), in: Circle())
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(moment.title).fieldLabel(color: moment.tint)
-                Text(moment.body)
-                    .growStyle(GrowType.callout(), color: GrowPalette.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(GrowSpacing.md)
-        .background(moment.tint.opacity(0.08), in: RoundedRectangle(cornerRadius: GrowRadius.md, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: GrowRadius.md, style: .continuous)
-                .stroke(moment.tint.opacity(0.18), lineWidth: 1)
+        ReceiptInfoRow(
+            icon: moment.icon,
+            title: moment.title,
+            body: moment.body,
+            tint: moment.tint
         )
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -676,13 +655,76 @@ private struct AlignmentBadge: View {
     let alignment: CaptureAlignment
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: -2) {
-            Text("\(alignment.percent)%")
-                .growStyle(GrowType.numeral(34), color: GrowPalette.sprout600)
-            Text(alignment.adjective).fieldLabel()
+        VStack(alignment: .trailing, spacing: 1) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text("\(alignment.percent)%")
+                    .growStyle(GrowType.numeral(32), color: GrowPalette.sprout600)
+                Text(alignment.adjective)
+                    .fieldLabel()
+            }
+
+            Text(alignment.sourceLabel)
+                .fieldLabel(color: GrowPalette.textSecondary)
+            Text(alignment.guidanceCopy)
+                .growStyle(GrowType.caption(), color: GrowPalette.textSecondary)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
         }
+        .frame(maxWidth: 148, alignment: .trailing)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Alignment \(alignment.percent) percent, \(alignment.adjective)")
+        .accessibilityLabel("Alignment \(alignment.percent) percent, \(alignment.adjective). \(alignment.guidanceCopy).")
+    }
+}
+
+private struct ReceiptHeaderMetric: View {
+    let label: String
+    let value: String
+    var suffix: String?
+    let detail: String
+    let tint: Color
+    var isTrailing = false
+
+    private var horizontalAlignment: HorizontalAlignment {
+        isTrailing ? .trailing : .leading
+    }
+
+    private var frameAlignment: Alignment {
+        isTrailing ? .topTrailing : .topLeading
+    }
+
+    private var textAlignment: TextAlignment {
+        isTrailing ? .trailing : .leading
+    }
+
+    var body: some View {
+        VStack(alignment: horizontalAlignment, spacing: 5) {
+            Text(label)
+                .fieldLabel(color: tint)
+                .lineLimit(1)
+
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text(value)
+                    .growStyle(GrowType.receiptValue(), color: isTrailing ? GrowPalette.sprout600 : GrowPalette.textPrimary)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
+                if let suffix {
+                    Text(suffix)
+                        .fieldLabel()
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: isTrailing ? .trailing : .leading)
+
+            Text(detail)
+                .growStyle(GrowType.caption(.semibold), color: GrowPalette.textSecondary)
+                .multilineTextAlignment(textAlignment)
+                .lineLimit(2)
+                .minimumScaleFactor(0.86)
+        }
+        .frame(maxWidth: .infinity, minHeight: CaptureRewardVisualContract.receiptHeaderMinHeight, alignment: frameAlignment)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -693,24 +735,15 @@ private struct TwinAdvanceCard: View {
     var isActive = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GrowSpacing.xs) {
-            HStack {
-                Text("Twin").fieldLabel()
-                Spacer()
-                Image(systemName: stage.systemImage)
-                    .foregroundStyle(GrowPalette.sprout600)
-                    .symbolEffect(.bounce, value: isActive)
-            }
-            ProgressView(value: progressAfter)
-                .tint(GrowPalette.sprout500)
-            Text("+\(Int(max(0, progressAfter - progressBefore) * 100))% expected growth")
-                .growStyle(GrowType.caption(), color: GrowPalette.textSecondary)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(GrowSpacing.md)
-        .background(GrowPalette.sprout50.opacity(0.7), in: RoundedRectangle(cornerRadius: GrowRadius.md, style: .continuous))
+        RewardMetricCell(
+            title: "Twin",
+            icon: stage.systemImage,
+            tint: GrowPalette.sprout600,
+            value: "+\(Int(max(0, progressAfter - progressBefore) * 100))%",
+            valueSuffix: "expected",
+            progress: progressAfter,
+            caption: "Modeled growth"
+        )
     }
 }
 
@@ -719,29 +752,126 @@ private struct StreakCard: View {
     var isActive = false
 
     var body: some View {
+        RewardMetricCell(
+            title: "Streak",
+            icon: update.spentFreezeToken ? "snowflake" : "flame.fill",
+            tint: update.spentFreezeToken ? GrowPalette.info : GrowPalette.bloom,
+            value: "\(update.current)",
+            valueSuffix: "days",
+            progress: update.milestoneProgress,
+            caption: update.milestoneCopy
+        )
+    }
+}
+
+private struct RewardMetricCell: View {
+    let title: String
+    let icon: String
+    let tint: Color
+    let value: String
+    let valueSuffix: String
+    let progress: Double
+    let caption: String
+
+    var body: some View {
         VStack(alignment: .leading, spacing: GrowSpacing.xs) {
-            HStack {
-                Text("Streak").fieldLabel()
-                Spacer()
-                Image(systemName: update.spentFreezeToken ? "snowflake" : "flame.fill")
-                    .foregroundStyle(update.spentFreezeToken ? GrowPalette.info : GrowPalette.bloom)
-                    .symbolEffect(.pulse, value: isActive)
+            HStack(alignment: .center, spacing: GrowSpacing.xs) {
+                Text(title)
+                    .fieldLabel()
+                Spacer(minLength: GrowSpacing.xs)
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(tint)
+                    .frame(width: CaptureRewardVisualContract.metricCellIconSize, height: CaptureRewardVisualContract.metricCellIconSize)
             }
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text("\(update.current)")
-                    .growStyle(GrowType.numeral(36), color: GrowPalette.textPrimary)
-                Text("days").growStyle(GrowType.caption(), color: GrowPalette.textSecondary)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(value)
+                    .growStyle(GrowType.receiptValue(32), color: GrowPalette.textPrimary)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .frame(height: CaptureRewardVisualContract.metricValueLineHeight, alignment: .bottomLeading)
+                Text(valueSuffix)
+                    .growStyle(GrowType.caption(.semibold), color: GrowPalette.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            ProgressView(value: update.milestoneProgress)
-                .tint(GrowPalette.bloom)
-            Text(update.milestoneCopy)
+
+            ProgressView(value: progress)
+                .tint(tint)
+
+            Text(caption)
                 .growStyle(GrowType.caption(), color: GrowPalette.textSecondary)
                 .lineLimit(2)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.82)
+        }
+        .frame(maxWidth: .infinity, minHeight: CaptureRewardVisualContract.metricCellMinHeight, alignment: .leading)
+        .padding(CaptureRewardVisualContract.metricCellPadding)
+        .background(GrowPalette.groundRaised.opacity(0.44), in: RoundedRectangle(cornerRadius: GrowRadius.md, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: GrowRadius.md, style: .continuous)
+                .stroke(GrowPalette.separator.opacity(0.68), lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct ReceiptInfoRow: View {
+    let icon: String
+    let title: String
+    let message: String
+    let tint: Color
+
+    init(icon: String, title: String, body: String, tint: Color) {
+        self.icon = icon
+        self.title = title
+        self.message = body
+        self.tint = tint
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: GrowSpacing.sm) {
+            Image(systemName: icon)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: CaptureRewardVisualContract.metricCellIconSize, height: CaptureRewardVisualContract.metricCellIconSize)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .fieldLabel(color: tint)
+                Text(message)
+                    .growStyle(GrowType.callout(), color: GrowPalette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(GrowSpacing.md)
-        .background(GrowPalette.bloom.opacity(0.14), in: RoundedRectangle(cornerRadius: GrowRadius.md, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct MilestoneReceiptRow: View {
+    let title: String
+
+    var body: some View {
+        HStack(alignment: .center, spacing: GrowSpacing.sm) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(GrowPalette.bloom)
+                .frame(width: CaptureRewardVisualContract.metricCellIconSize, height: CaptureRewardVisualContract.metricCellIconSize)
+            Text(title)
+                .growStyle(GrowType.callout(.semibold), color: GrowPalette.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct ReceiptDivider: View {
+    var body: some View {
+        Hairline(color: GrowPalette.separator.opacity(0.72))
     }
 }
 
@@ -936,14 +1066,19 @@ private struct PlantCameraView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .opacity(0.22)
+                    .opacity(camera.status.isReady ? 0.3 : 0.2)
                     .saturation(0.45)
                     .blendMode(.screen)
                     .ignoresSafeArea()
                     .accessibilityHidden(true)
             }
 
-            CameraGuideOverlay(progress: currentProgress, frameCount: frameCount, speciesName: speciesName)
+            CameraGuideOverlay(
+                progress: currentProgress,
+                frameCount: frameCount,
+                speciesName: speciesName,
+                hasGhostGuide: latestThumbnailData != nil
+            )
                 .padding(.horizontal, GrowSpacing.lg)
                 .padding(.top, GrowSpacing.lg)
                 .padding(.bottom, GrowSpacing.xl)
@@ -968,6 +1103,10 @@ private struct PlantCameraView: View {
                 .padding(.top, GrowSpacing.lg)
 
                 Spacer()
+
+                CameraConfidenceHUD(camera: camera)
+                    .padding(.horizontal, GrowSpacing.lg)
+                    .padding(.bottom, GrowSpacing.sm)
 
                 Button(action: capture) {
                     ZStack {
@@ -1061,6 +1200,7 @@ private struct CameraGuideOverlay: View {
     let progress: Double
     let frameCount: Int
     let speciesName: String
+    let hasGhostGuide: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1087,6 +1227,11 @@ private struct CameraGuideOverlay: View {
                         .font(.system(size: 22, weight: .semibold))
                     Text("Same angle")
                         .font(GrowType.caption(.semibold))
+                    if hasGhostGuide {
+                        Text("Ghost guide on")
+                            .font(GrowType.caption())
+                            .foregroundStyle(.white.opacity(0.68))
+                    }
                 }
                 .foregroundStyle(.white.opacity(0.82))
                 .padding(.vertical, GrowSpacing.sm)
@@ -1114,6 +1259,89 @@ private struct CameraGuideOverlay: View {
             .padding(.bottom, 124)
         }
         .allowsHitTesting(false)
+    }
+}
+
+private struct CameraConfidenceHUD: View {
+    let camera: CameraCaptureService
+
+    var body: some View {
+        HStack(spacing: GrowSpacing.sm) {
+            if camera.supportsZoom {
+                CameraZoomControl(camera: camera)
+            }
+
+            if camera.supportsFocusExposureLock {
+                Button {
+                    camera.toggleFocusExposureLock()
+                } label: {
+                    Image(systemName: camera.isFocusExposureLocked ? "lock.fill" : "lock.open.fill")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 46, height: 46)
+                        .background(.black.opacity(0.34), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(camera.isFocusExposureLocked ? "Unlock focus and exposure" : "Lock focus and exposure")
+            }
+
+            if !camera.supportsZoom && !camera.supportsFocusExposureLock {
+                CameraSteadyCue()
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct CameraZoomControl: View {
+    let camera: CameraCaptureService
+
+    var body: some View {
+        HStack(spacing: GrowSpacing.xs) {
+            Image(systemName: "plus.magnifyingglass")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.86))
+
+            Slider(
+                value: Binding(
+                    get: { camera.zoomFactor },
+                    set: { camera.setZoomFactor($0) }
+                ),
+                in: camera.minZoomFactor...camera.maxZoomFactor
+            )
+            .tint(GrowPalette.bloom)
+
+            Text("\(camera.zoomFactor, specifier: "%.1f")x")
+                .font(GrowType.caption(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(.white.opacity(0.86))
+                .frame(width: 40, alignment: .trailing)
+        }
+        .padding(.vertical, 9)
+        .padding(.leading, 12)
+        .padding(.trailing, 10)
+        .frame(maxWidth: 260)
+        .background(.black.opacity(0.34), in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("Zoom \(camera.zoomFactor, specifier: "%.1f") times"))
+    }
+}
+
+private struct CameraSteadyCue: View {
+    var body: some View {
+        HStack(spacing: GrowSpacing.xs) {
+            Image(systemName: "camera.metering.center.weighted")
+                .font(.system(size: 15, weight: .semibold))
+            Text("Hold steady")
+                .font(GrowType.caption(.semibold))
+                .lineLimit(1)
+        }
+        .foregroundStyle(.white.opacity(0.82))
+        .padding(.vertical, 10)
+        .padding(.horizontal, 13)
+        .background(.black.opacity(0.28), in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Hold steady")
     }
 }
 
@@ -1166,7 +1394,7 @@ private struct CaptureEmptyState: View {
                 .frame(maxWidth: .infinity)
             VStack(alignment: .leading, spacing: GrowSpacing.sm) {
                 Text("Start with one living subject.")
-                    .growStyle(GrowType.serifTitle())
+                    .growStyle(GrowType.displayTitle())
                     .fixedSize(horizontal: false, vertical: true)
                 Text("\(speciesCount) beginner-proof crops are ready for their first frame.")
                     .growStyle(GrowType.body(), color: GrowPalette.textSecondary)
