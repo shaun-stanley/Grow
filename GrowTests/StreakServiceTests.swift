@@ -5,6 +5,7 @@ import XCTest
 @MainActor
 final class StreakServiceTests: XCTestCase {
     private var containers: [ModelContainer] = []
+    private var services: [StreakService] = []
 
     func testSameDayCaptureDoesNotAdvanceTwice() throws {
         let service = try makeService()
@@ -53,7 +54,9 @@ final class StreakServiceTests: XCTestCase {
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [config])
         containers.append(container)
-        return StreakService(context: ModelContext(container), calendar: calendar)
+        let service = StreakService(context: ModelContext(container), calendar: calendar)
+        services.append(service)
+        return service
     }
 
     private var calendar: Calendar {

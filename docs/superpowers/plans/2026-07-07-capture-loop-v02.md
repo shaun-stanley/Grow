@@ -27,11 +27,11 @@
 ## Living To-Do
 
 - [x] Task 1: Create test harness and clean agent scratch status.
-- [ ] Task 2: Extract capture reward policy and alignment metadata.
+- [x] Task 2: Extract capture reward policy and alignment metadata.
 - [x] Task 3: Add deterministic first-week QA launch states.
 - [x] Task 4: Improve camera confidence service/UI.
 - [x] Task 5: Improve reward accessibility and visual polish.
-- [ ] Task 6: Build, run, screenshot, and update this plan with final verification.
+- [x] Task 6: Build, run, screenshot, and update this plan with final verification.
 - [x] Task 7: Redesign reward surface as a Field Journal Receipt.
 
 ## Change Log
@@ -54,6 +54,7 @@
 | 2026-07-08 | Removed the app-wide custom display/rounded type choices from `GrowType` and switched display, body, labels, and numerals to Apple's default system font. Added visual contract coverage for native system typography, single-line metric values, and safe reward scroll positioning. |
 | 2026-07-08 | Reworked the reward receipt header into matched Day/match columns and moved metric units below primary values so `Day 2`/`Day 7`, `90%`/`89%`, `+7%`, and `2`/`7` no longer fight on mismatched baselines. XcodeBuildMCP screenshots passed visual QA: Day 2 `/var/folders/gk/w7mrg4_s4p70csf9bngwply40000gn/T/screenshot_optimized_fd749461-be1a-41e9-8718-3c03396437b1.jpg`; Day 7 `/var/folders/gk/w7mrg4_s4p70csf9bngwply40000gn/T/screenshot_optimized_a24f401f-4579-4306-bd81-d72044b7ef41.jpg`. |
 | 2026-07-08 | Task 7 verification complete: focused `CaptureRewardVisualContractTests` passed, `git diff --check` passed, no non-default font design references remain in source, XcodeBuildMCP Day 2/Day 7 build-runs passed, and the repo-required `xcodebuild ... CODE_SIGNING_ALLOWED=NO build` passed after the expected sandbox escalation. |
+| 2026-07-11 | Reconciled stale top-level Task 2/Task 6 status. XcodeBuildMCP ran all 21 tests on iPhone 17 Pro (iOS 26.2): 21 passed, 0 failed. Fixed a test-only `StreakService` teardown crash by retaining the observable service alongside its in-memory `ModelContainer`; the original focused failure and full parallel suite now pass. The repository-required escalated `xcodebuild ... CODE_SIGNING_ALLOWED=NO build` succeeded. |
 
 ## File Structure
 
