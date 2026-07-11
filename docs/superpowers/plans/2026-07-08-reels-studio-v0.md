@@ -31,7 +31,7 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - [x] Task 1: Add Reels studio policy and visual contract with focused tests.
 - [x] Task 2: Extract and polish the Reels studio UI.
 - [x] Task 3: Verify share/export behavior and simulator visual quality.
-- [ ] Task 4: Commit and push the verified implementation.
+- [x] Task 4: Commit and push the verified implementation.
 
 ## Change Log
 
@@ -44,6 +44,7 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - 2026-07-09: Task 2 Accessibility Medium QA still exposed poster-overlay wrapping: `captured` split inside the preview card. Adding compact poster overlay typography so decorative media chrome does not inherit oversized text.
 - 2026-07-11: Completed Task 2. Extracted the studio into `ReelsScreen.swift`, kept poster/action/status in the first viewport, added compact Dynamic Type geometry, validated local export URLs before presenting share actions, and removed the generic nested-card treatment.
 - 2026-07-11: Completed Task 3. Sosumi confirmed native `ShareLink` file sharing and the AVFoundation pixel-buffer writer approach. XcodeBuildMCP passed all 21 tests and built/launched on iPhone 17 Pro (iOS 26.2). Standard, exported, and Accessibility Large screenshots passed visual QA. The rendered six-frame `.mov` was 78,015 bytes, and semantic UI snapshots exposed both latest-reel and per-export share actions.
+- 2026-07-11: Completed Task 4. Committed Reels Studio UI polish as `b06c057` and pushed the verified implementation to `origin/main`.
 
 ## File Structure
 
