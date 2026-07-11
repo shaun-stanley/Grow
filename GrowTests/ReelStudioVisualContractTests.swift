@@ -3,8 +3,14 @@ import XCTest
 
 final class ReelStudioVisualContractTests: XCTestCase {
     func testStudioLayoutConstantsProtectFirstViewport() {
-        XCTAssertEqual(ReelStudioVisualContract.previewMaxWidth, 258)
+        XCTAssertEqual(ReelStudioVisualContract.previewMaxWidth, 208)
+        XCTAssertEqual(ReelStudioVisualContract.accessibilityPreviewMaxWidth, 164)
         XCTAssertEqual(ReelStudioVisualContract.previewAspectRatio, 9.0 / 16.0)
+        XCTAssertEqual(ReelStudioVisualContract.posterDayFontSize, 52)
+        XCTAssertEqual(ReelStudioVisualContract.accessibilityPosterDayFontSize, 34)
+        XCTAssertEqual(ReelStudioVisualContract.accessibilityPosterStatusFontSize, 13)
+        XCTAssertEqual(ReelStudioVisualContract.studioContentSpacing, 16)
+        XCTAssertEqual(ReelStudioVisualContract.accessibilityContentSpacing, 12)
         XCTAssertEqual(ReelStudioVisualContract.primaryActionHeight, 52)
         XCTAssertEqual(ReelStudioVisualContract.shareButtonSize, 52)
         XCTAssertEqual(ReelStudioVisualContract.exportThumbnailWidth, 40)

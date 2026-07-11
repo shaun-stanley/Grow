@@ -82,8 +82,14 @@ enum ReelStudioPolicy {
 }
 
 enum ReelStudioVisualContract {
-    static let previewMaxWidth: CGFloat = 258
+    static let previewMaxWidth: CGFloat = 208
+    static let accessibilityPreviewMaxWidth: CGFloat = 164
     static let previewAspectRatio: CGFloat = 9.0 / 16.0
+    static let posterDayFontSize: CGFloat = 52
+    static let accessibilityPosterDayFontSize: CGFloat = 34
+    static let accessibilityPosterStatusFontSize: CGFloat = 13
+    static let studioContentSpacing: CGFloat = 16
+    static let accessibilityContentSpacing: CGFloat = 12
     static let primaryActionHeight: CGFloat = 52
     static let shareButtonSize: CGFloat = 52
     static let exportThumbnailWidth: CGFloat = 40

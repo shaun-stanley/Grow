@@ -29,8 +29,8 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 ## Living Todo
 
 - [x] Task 1: Add Reels studio policy and visual contract with focused tests.
-- [x] Task 2: Extract and polish the Reels studio UI. _(in progress)_
-- [ ] Task 3: Verify share/export behavior and simulator visual quality.
+- [x] Task 2: Extract and polish the Reels studio UI.
+- [x] Task 3: Verify share/export behavior and simulator visual quality.
 - [ ] Task 4: Commit and push the verified implementation.
 
 ## Change Log
@@ -39,6 +39,11 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - 2026-07-08: Started Task 1, adding pure Reels readiness/share policy and visual contract tests.
 - 2026-07-08: Completed Task 1. Added `ReelStudioPolicy`, `ReelStudioVisualContract`, and focused tests for progress, status, share URL eligibility, and anti-slop layout constants. All 7 focused tests passed on iPhone 17 Pro.
 - 2026-07-08: Started Task 2. Extracting Reels views from `RootView.swift` and applying the share-ready studio layout.
+- 2026-07-08: Task 2 visual QA failed the first pass. The 258pt poster pushed status below the tab bar, and the framed readiness strip truncated copy and read as a generic stacked card. Revising to a 208pt poster, 16pt studio rhythm, and unframed readiness/status rows.
+- 2026-07-08: Task 2 Accessibility Medium QA failed. The masthead wrapped safely, but readiness labels split mid-word and status fell behind the tab bar. Adding accessibility-specific 164pt poster geometry, 12pt rhythm, and compact metric copy.
+- 2026-07-09: Task 2 Accessibility Medium QA still exposed poster-overlay wrapping: `captured` split inside the preview card. Adding compact poster overlay typography so decorative media chrome does not inherit oversized text.
+- 2026-07-11: Completed Task 2. Extracted the studio into `ReelsScreen.swift`, kept poster/action/status in the first viewport, added compact Dynamic Type geometry, validated local export URLs before presenting share actions, and removed the generic nested-card treatment.
+- 2026-07-11: Completed Task 3. Sosumi confirmed native `ShareLink` file sharing and the AVFoundation pixel-buffer writer approach. XcodeBuildMCP passed all 21 tests and built/launched on iPhone 17 Pro (iOS 26.2). Standard, exported, and Accessibility Large screenshots passed visual QA. The rendered six-frame `.mov` was 78,015 bytes, and semantic UI snapshots exposed both latest-reel and per-export share actions.
 
 ## File Structure
 
