@@ -190,7 +190,7 @@ Run the focused test, then `test_sim()` through XcodeBuildMCP.
 
 Expected: all existing tests plus the three new tests pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add Grow/Models/GrowPhotoOrigin.swift Grow/Models/GrowModels.swift GrowTests/GrowPhotoOriginTests.swift
@@ -208,7 +208,7 @@ git push origin main
 - Produces: `NormalizedPoint`, `DemoGrowCropIntent`, `DemoGrowStoryMoment`, `DemoGrowPhotoFrame`, `DemoGrowPhotoManifest`, `DemoGrowPhotoLibrary`, `DemoGrowPhotoLibraryError`.
 - Consumes: `Foundation.Data`, injected asset lookup `(String) -> Data?`.
 
-- [ ] **Step 1: Write failing manifest contract tests**
+- [x] **Step 1: Write failing manifest contract tests**
 
 Create `GrowTests/DemoGrowPhotoLibraryTests.swift` with an in-memory asset loader:
 
@@ -307,7 +307,7 @@ private static let validJPEG: Data = {
 }()
 ```
 
-- [ ] **Step 2: Run the focused tests and verify RED**
+- [x] **Step 2: Run the focused tests and verify RED**
 
 Run:
 
@@ -317,7 +317,7 @@ test_sim(extraArgs: ["-only-testing:GrowTests/DemoGrowPhotoLibraryTests"])
 
 Expected: compile failure because the manifest and library types do not exist.
 
-- [ ] **Step 3: Implement the manifest contract and validator**
+- [x] **Step 3: Implement the manifest contract and validator**
 
 Create `Grow/Services/DemoGrowPhotoLibrary.swift` with these public-to-module contracts:
 
@@ -431,7 +431,7 @@ struct DemoGrowPhotoLibrary: Sendable {
 }
 ```
 
-- [ ] **Step 4: Run focused and full tests**
+- [x] **Step 4: Run focused and full tests**
 
 Expected: all manifest tests and the full suite pass.
 
