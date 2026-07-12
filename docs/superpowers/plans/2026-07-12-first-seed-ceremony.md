@@ -32,7 +32,7 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 ## Living Todo
 
 - [x] Task 1: Add onboarding policy and coordinator with focused tests.
-- [ ] Task 2: Add recoverable grow and photo persistence.
+- [x] Task 2: Add recoverable grow and photo persistence.
 - [ ] Task 3: Extract shared guided camera and reward sequence.
 - [ ] Task 4: Build Promise, Choose, Setup, and sample-mode UI.
 - [ ] Task 5: Integrate Day-1 capture, reward, and completion routing.
@@ -43,6 +43,8 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - 2026-07-12: Plan created from the approved First Seed Ceremony design spec and high-fidelity storyboard.
 - 2026-07-12: Started Task 1, defining pure onboarding state and transition contracts before UI work.
 - 2026-07-12: Completed Task 1 with 6 focused onboarding tests, 27 full-suite tests, and the required simulator build passing. Coordinator tests use async XCTest methods to preserve MainActor teardown under Xcode 26.2.
+- 2026-07-12: Started Task 2, making grow and photo persistence recoverable before UI integration.
+- 2026-07-12: Completed Task 2 with recoverable grow creation/deletion, scoped photo rollback, user-facing creation errors, 3 focused persistence tests, 30 full-suite tests, and the required simulator build passing.
 
 ## File Structure
 

@@ -21,6 +21,7 @@ struct CaptureScreen: View {
     @State private var isShowingCamera = false
     @State private var isCapturing = false
     @State private var captureError: String?
+    @State private var creationError: String?
 
     var body: some View {
         NavigationStack {
@@ -49,6 +50,11 @@ struct CaptureScreen: View {
             .toolbarBackground(.visible, for: .navigationBar)
         }
         .animation(.smooth(duration: 0.45), value: grows.isEmpty)
+        .alert("Couldn’t start your grow", isPresented: creationErrorBinding) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(creationError ?? "Please try again.")
+        }
         .onChange(of: selectedPhotoItem) { _, item in
             guard let item, let grow = grows.first else { return }
             Task { await importPhoto(item, for: grow) }
@@ -69,6 +75,13 @@ struct CaptureScreen: View {
                 .ignoresSafeArea()
             }
         }
+    }
+
+    private var creationErrorBinding: Binding<Bool> {
+        Binding(
+            get: { creationError != nil },
+            set: { if !$0 { creationError = nil } }
+        )
     }
 
     private var navigationSubtitle: LocalizedStringKey {
@@ -140,8 +153,13 @@ struct CaptureScreen: View {
     private func plantFirst() {
         let pick = catalog.beginnerPicks.first ?? catalog.species.first
         guard let pick else { return }
-        let grow = store.createGrow(speciesID: pick.id, nickname: "", system: .kratky)
-        widgetSyncService.sync(activeGrow: grow, species: pick, streak: streakService.snapshot())
+        do {
+            let grow = try store.createGrow(speciesID: pick.id, nickname: "", system: .kratky)
+            creationError = nil
+            widgetSyncService.sync(activeGrow: grow, species: pick, streak: streakService.snapshot())
+        } catch {
+            creationError = error.localizedDescription
+        }
     }
 }
 

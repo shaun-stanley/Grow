@@ -31,10 +31,11 @@ struct GrowApp: App {
         let launchArguments = CommandLine.arguments
         // Debug-only: seed a grown specimen so the active "spread" can be reviewed.
         if launchArguments.contains("-seedSampleGrow"), store.activeGrows().isEmpty {
-            let grow = store.createGrow(speciesID: "basil", nickname: "Genovese Basil", system: .kratky)
-            grow.startDate = Calendar.current.date(byAdding: .day, value: -23, to: Date()) ?? Date()
-            grow.currentStage = .flowering
-            store.save()
+            if let grow = try? store.createGrow(speciesID: "basil", nickname: "Genovese Basil", system: .kratky) {
+                grow.startDate = Calendar.current.date(byAdding: .day, value: -23, to: Date()) ?? Date()
+                grow.currentStage = .flowering
+                try? store.save()
+            }
         }
 
         Self.seedFirstWeekIfRequested(
@@ -104,12 +105,14 @@ struct GrowApp: App {
     ) {
         #if DEBUG
         guard arguments.contains("-seedFirstWeekGrow") else { return }
-        store.resetDebugSampleData()
+        try? store.resetDebugSampleData()
 
         let targetDay = Int(launchValue(after: "-seedFirstWeekDay", in: arguments) ?? "2") ?? 2
         let clampedDay = min(7, max(1, targetDay))
         let startDate = Calendar.current.date(byAdding: .day, value: -(clampedDay - 1), to: Date()) ?? Date()
-        let grow = store.createGrow(speciesID: "basil", nickname: "First Week Basil", system: .kratky)
+        guard let grow = try? store.createGrow(speciesID: "basil", nickname: "First Week Basil", system: .kratky) else {
+            return
+        }
         grow.startDate = Calendar.current.startOfDay(for: startDate)
         grow.currentStage = .germination
 
@@ -119,7 +122,7 @@ struct GrowApp: App {
                 .addingTimeInterval(9 * 60 * 60) ?? Date()
             _ = photoService.recordPrototypeCapture(for: grow, species: species, capturedAt: captureDate)
         }
-        store.save()
+        try? store.save()
         #endif
     }
 }

@@ -58,6 +58,7 @@ struct HomeTwinScreen: View {
         filter: #Predicate<Grow> { $0.isActive && $0.archivedDate == nil },
         sort: \Grow.startDate, order: .reverse
     ) private var grows: [Grow]
+    @State private var creationError: String?
 
     var body: some View {
         ZStack {
@@ -71,13 +72,30 @@ struct HomeTwinScreen: View {
             }
         }
         .animation(.smooth(duration: 0.6), value: grows.isEmpty)
+        .alert("Couldn’t start your grow", isPresented: creationErrorBinding) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(creationError ?? "Please try again.")
+        }
+    }
+
+    private var creationErrorBinding: Binding<Bool> {
+        Binding(
+            get: { creationError != nil },
+            set: { if !$0 { creationError = nil } }
+        )
     }
 
     private func plantFirst() {
         let pick = catalog.beginnerPicks.first ?? catalog.species.first
         guard let pick else { return }
-        let grow = store.createGrow(speciesID: pick.id, nickname: "", system: .kratky)
-        widgetSyncService.sync(activeGrow: grow, species: pick, streak: streakService.snapshot())
+        do {
+            let grow = try store.createGrow(speciesID: pick.id, nickname: "", system: .kratky)
+            creationError = nil
+            widgetSyncService.sync(activeGrow: grow, species: pick, streak: streakService.snapshot())
+        } catch {
+            creationError = error.localizedDescription
+        }
     }
 }
 

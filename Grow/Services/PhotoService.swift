@@ -108,13 +108,20 @@ struct CaptureReward: Identifiable, Equatable {
 final class PhotoService {
     private let context: ModelContext
     private let streakService: StreakService
+    private let saveContext: (ModelContext) throws -> Void
     private let encoder = JSONEncoder()
     private let calendar: Calendar
 
-    init(context: ModelContext, streakService: StreakService, calendar: Calendar = .current) {
+    init(
+        context: ModelContext,
+        streakService: StreakService,
+        calendar: Calendar = .current,
+        saveContext: @escaping (ModelContext) throws -> Void = { try $0.save() }
+    ) {
         self.context = context
         self.streakService = streakService
         self.calendar = calendar
+        self.saveContext = saveContext
     }
 
     @discardableResult
@@ -152,13 +159,27 @@ final class PhotoService {
         photo.grow = grow
         context.insert(photo)
 
+        let previousCoverPhotoID = grow.coverPhotoID
+        let previousStage = grow.currentStage
         if grow.coverPhotoID == nil {
             grow.coverPhotoID = photo.id
         }
         grow.currentStage = stage
 
+        do {
+            try save()
+        } catch {
+            rollbackCapture(
+                photo,
+                localFileName: localFileName,
+                grow: grow,
+                previousCoverPhotoID: previousCoverPhotoID,
+                previousStage: previousStage
+            )
+            throw error
+        }
+
         let streak = streakService.recordCapture(at: capturedAt)
-        save()
 
         return CaptureReward(
             photoID: photo.id,
@@ -226,7 +247,7 @@ final class PhotoService {
         grow.currentStage = stage
 
         let streak = streakService.recordCapture(at: capturedAt)
-        save()
+        try? save()
 
         return CaptureReward(
             photoID: photo.id,
@@ -478,13 +499,28 @@ final class PhotoService {
         AppGroup.containerURL.appendingPathComponent(localFileName)
     }
 
-    private func save() {
+    private func rollbackCapture(
+        _ photo: GrowPhoto,
+        localFileName: String,
+        grow: Grow,
+        previousCoverPhotoID: UUID?,
+        previousStage: GrowStage
+    ) {
+        try? FileManager.default.removeItem(at: photoURL(for: localFileName))
+        grow.photos?.removeAll { $0.id == photo.id }
+        context.delete(photo)
+        grow.coverPhotoID = previousCoverPhotoID
+        grow.currentStage = previousStage
+    }
+
+    private func save() throws {
         do {
-            try context.save()
+            try saveContext(context)
         } catch {
             #if DEBUG
             print("Grow: photo save failed: \(error)")
             #endif
+            throw PhotoServiceError.metadataSaveFailed
         }
     }
 }
@@ -503,6 +539,7 @@ private extension UIColor {
 enum PhotoServiceError: LocalizedError {
     case unreadableImage
     case unableToEncodeImage
+    case metadataSaveFailed
 
     var errorDescription: String? {
         switch self {
@@ -510,6 +547,8 @@ enum PhotoServiceError: LocalizedError {
             "Grow could not read that plant photo."
         case .unableToEncodeImage:
             "Grow could not prepare that photo for your timeline."
+        case .metadataSaveFailed:
+            "Grow could not save that growth memory. Please try again."
         }
     }
 }
