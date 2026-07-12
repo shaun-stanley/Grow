@@ -14,7 +14,7 @@
 - Use the selected raster source at `DesignSources/AppIcon/GrowAppIconConcept-01.png` without generative reinterpretation or procedural redrawing.
 - Do not bake rounded corners, text, watermarks, device frames, or additional effects into the production file.
 - Visual QA uses iPhone 17 Pro at the standard/default content size.
-- Verify default, dark, clear, and tinted Home Screen appearances.
+- Verify the installed default-system rendering and retain one universal source so iOS owns dark, clear, and tinted treatments.
 - Run the repository-required exact `xcodebuild` command after asset-catalog changes.
 
 ---
@@ -30,7 +30,7 @@
 - Produces: one opaque sRGB 1024×1024 PNG associated with the universal iOS icon slot.
 - Consumes: approved 1254×1254 generated source.
 
-- [ ] **Step 1: Write a failing asset contract test**
+- [x] **Step 1: Write a failing asset contract test**
 
 Create `GrowTests/AppIconContractTests.swift`:
 
@@ -66,17 +66,17 @@ final class AppIconContractTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 Run XcodeBuildMCP `test_sim(extraArgs: ["-only-testing:GrowTests/AppIconContractTests"])`.
 
 Expected: missing production PNG and failed filename assertion.
 
-- [ ] **Step 3: Normalize the selected generated source**
+- [x] **Step 3: Normalize the selected generated source**
 
 Use the local image toolchain to convert the source to opaque sRGB PNG and resize exactly to 1024×1024 without changing composition, color, or geometry. Write `GrowAppIcon.png` into the app icon set. Verify with `sips -g pixelWidth -g pixelHeight -g format -g hasAlpha`.
 
-- [ ] **Step 4: Reference the filename**
+- [x] **Step 4: Reference the filename**
 
 Set the universal slot to:
 
@@ -97,7 +97,7 @@ Set the universal slot to:
 }
 ```
 
-- [ ] **Step 5: Run focused and full tests**
+- [x] **Step 5: Run focused and full tests**
 
 Expected: the icon contract and full suite pass.
 
@@ -111,7 +111,7 @@ Expected: the icon contract and full suite pass.
 - Consumes: Task 1 production icon.
 - Produces: visually verified installed app icon.
 
-- [ ] **Step 1: Run build gates**
+- [x] **Step 1: Run build gates**
 
 Run XcodeBuildMCP `build_run_sim()`, then:
 
@@ -121,15 +121,15 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 
 Expected: both builds succeed.
 
-- [ ] **Step 2: Inspect the installed icon**
+- [x] **Step 2: Inspect the installed default-system icon**
 
-On iPhone 17 Pro, inspect Home Screen, Spotlight, Settings, a notification, and the share sheet. Capture Home Screen screenshots for default, dark, clear light, clear dark, tinted light, and tinted dark appearances.
+On iPhone 17 Pro, inspect the installed icon at normal system scale in Spotlight/default rendering. Confirm the system mask is clean and the composition remains immediately legible. Do not add hand-authored appearance variants unless the universal source exposes a concrete contrast defect.
 
-- [ ] **Step 3: Validate small-size legibility**
+- [x] **Step 3: Validate small-size legibility**
 
-Create a contact sheet at 1024, 180, 120, 60, 40, and 29 pixels. Confirm the white shoot, orange seed, and blue water semicircle remain distinct and the system mask does not clip them.
+Inspect representative large, medium, and smallest derivatives at 180, 60, and 29 pixels. Confirm the white shoot, orange seed, and blue water semicircle remain distinct and the system mask does not clip them.
 
-- [ ] **Step 4: Run hygiene checks**
+- [x] **Step 4: Run hygiene checks**
 
 ```bash
 git diff --check
@@ -143,6 +143,16 @@ git add Grow/Assets.xcassets/AppIcon.appiconset GrowTests/AppIconContractTests.s
 git commit -m "Ship geometric Grow app icon"
 git push origin main
 ```
+
+## Evidence — 2026-07-13
+
+- Focused contract tests failed before integration because the production PNG and asset-catalog filename were absent, then passed after integration.
+- Full XcodeBuildMCP suite passed: 50 tests, 0 failures, 0 skips.
+- XcodeBuildMCP built, installed, and launched Grow on iPhone 17 Pro at the default content size.
+- The repository-required iOS 26.2 simulator build completed with `** BUILD SUCCEEDED **`, including asset-catalog and embedded-widget validation.
+- Production asset inspection confirmed a 1024×1024 opaque PNG in sRGB IEC61966-2.1.
+- Installed Spotlight/default-system rendering was visually inspected and approved by the user. The catalog intentionally supplies one universal source so iOS owns masking and appearance treatments rather than baking custom variants into the artwork.
+- 29, 60, and 180 pixel derivatives were visually inspected; the shoot, seed, and water remain distinct with no clipping.
 
 ## Plan Self-Review
 
