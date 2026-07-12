@@ -10,7 +10,19 @@ final class OnboardingCoordinator {
     private(set) var pendingGrowRequest: OnboardingGrowRequest?
     private(set) var createdGrowID: UUID?
     private(set) var reward: CaptureReward?
+    private(set) var didComplete = false
     var errorMessage: String?
+
+    var canComplete: Bool {
+        createdGrowID != nil && reward != nil && step == .reward && !didComplete
+    }
+
+    func start(at step: OnboardingStep) {
+        self.step = step
+        pendingGrowRequest = nil
+        errorMessage = nil
+        didComplete = false
+    }
 
     func begin() {
         step = .crop
@@ -43,7 +55,19 @@ final class OnboardingCoordinator {
 
     func didCapture(_ reward: CaptureReward) {
         self.reward = reward
+        errorMessage = nil
         step = .reward
+    }
+
+    func captureFailed(message: String) {
+        errorMessage = message
+        step = .capture
+    }
+
+    func complete() -> Bool {
+        guard canComplete else { return false }
+        didComplete = true
+        return true
     }
 
     func showSample() {

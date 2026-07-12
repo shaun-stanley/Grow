@@ -132,7 +132,7 @@ private struct ReelStudio: View {
                         color: GrowPalette.sprout600
                     )
                     .monospacedDigit()
-                Text("frames")
+                Text(photos.count == 1 ? "frame" : "frames")
                     .fieldLabel()
             }
             Hairline()
@@ -176,7 +176,7 @@ private struct ReelReadinessStrip: View {
             )
             if !isCompact {
                 Spacer(minLength: 0)
-                Text("\(frameCount) / 30 frames")
+                Text("\(CaptureRewardPolicy.frameCountLabel(frameCount)) / 30")
                     .fieldLabel()
                     .monospacedDigit()
                     .lineLimit(1)
@@ -402,7 +402,7 @@ private struct ReelPosterPreview: View {
         .shadow(color: Color.black.opacity(0.12), radius: 16, y: 8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
-            "Reel preview for \(displayName), Day \(latestPhoto?.dayIndex ?? grow.dayCount), \(frameCount) frames"
+            "Reel preview for \(displayName), Day \(latestPhoto?.dayIndex ?? grow.dayCount), \(CaptureRewardPolicy.frameCountLabel(frameCount))"
         )
     }
 
@@ -446,7 +446,9 @@ private struct ReelPosterPreview: View {
 
     private var statusText: String {
         if frameCount > 0 {
-            return isAccessibilityLayout ? "\(frameCount) frames" : "\(frameCount) frames captured"
+            return isAccessibilityLayout
+                ? CaptureRewardPolicy.frameCountLabel(frameCount)
+                : CaptureRewardPolicy.capturedFrameCountLabel(frameCount)
         }
         return isAccessibilityLayout ? "Frame 1" : "Frame 1 is waiting"
     }

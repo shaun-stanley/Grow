@@ -43,12 +43,14 @@ struct GuidedPlantCameraView: View {
     let configuration: GuidedPlantCameraConfiguration
     var onCapture: (Data) -> Void
     var onCancel: () -> Void
+    var onFailure: (String) -> Void = { _ in }
 
     var body: some View {
         GuidedPlantCameraContent(
             configuration: configuration,
             onCapture: onCapture,
-            onCancel: onCancel
+            onCancel: onCancel,
+            onFailure: onFailure
         )
     }
 }

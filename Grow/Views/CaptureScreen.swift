@@ -431,7 +431,7 @@ private struct CaptureActionDeck: View {
     }
 }
 
-private struct CaptureFrameGuide: View {
+struct CaptureFrameGuide: View {
     var body: some View {
         Canvas { context, size in
             let length: CGFloat = 28
@@ -624,7 +624,7 @@ private struct GrowthMemoryCard: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(reward.frameCount)")
                     .growStyle(GrowType.numeral(34), color: GrowPalette.textPrimary)
-                Text("frames").fieldLabel()
+                Text(reward.frameCount == 1 ? "frame" : "frames").fieldLabel()
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1064,9 +1064,11 @@ struct GuidedPlantCameraContent: View {
     let configuration: GuidedPlantCameraConfiguration
     var onCapture: (Data) -> Void
     var onCancel: () -> Void
+    var onFailure: (String) -> Void = { _ in }
 
     @State private var camera = CameraCaptureService()
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -1173,6 +1175,23 @@ struct GuidedPlantCameraContent: View {
                     Text("Import still works for today's reel.")
                         .growStyle(GrowType.callout(), color: .white.opacity(0.74))
                         .multilineTextAlignment(.center)
+
+                    VStack(spacing: GrowSpacing.sm) {
+                        Button("Open Camera Settings") {
+                            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                            openURL(url)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .buttonBorderShape(.capsule)
+                        .tint(GrowPalette.sprout500)
+                        .frame(minHeight: GrowSpacing.touchTargetMin)
+
+                        Button("Import a photo instead", action: close)
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.white)
+                            .frame(minHeight: GrowSpacing.touchTargetMin)
+                    }
+                    .padding(.top, GrowSpacing.sm)
                 }
             }
             .padding(.horizontal, GrowSpacing.xl)
@@ -1181,8 +1200,11 @@ struct GuidedPlantCameraContent: View {
 
     private func capture() {
         camera.capturePhoto { result in
-            if case .success(let data) = result {
+            switch result {
+            case .success(let data):
                 onCapture(data)
+            case .failure(let error):
+                onFailure(error.localizedDescription)
             }
         }
     }
@@ -1456,7 +1478,7 @@ private extension Array {
     }
 }
 
-private enum CaptureHaptics {
+enum CaptureHaptics {
     static func reward() {
         #if canImport(UIKit)
         let impact = UIImpactFeedbackGenerator(style: .medium)

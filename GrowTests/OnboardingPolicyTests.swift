@@ -47,4 +47,39 @@ final class OnboardingPolicyTests: XCTestCase {
             .app
         )
     }
+
+    func testForcedPreviewRelinquishesControlAfterCompletion() {
+        XCTAssertTrue(
+            OnboardingPolicy.shouldShowCeremony(
+                route: .app,
+                forcesPreview: true,
+                didDismissPreview: false
+            )
+        )
+        XCTAssertFalse(
+            OnboardingPolicy.shouldShowCeremony(
+                route: .app,
+                forcesPreview: true,
+                didDismissPreview: true
+            )
+        )
+        XCTAssertTrue(
+            OnboardingPolicy.shouldShowCeremony(
+                route: .resumeCapture,
+                forcesPreview: false,
+                didDismissPreview: true
+            )
+        )
+    }
+
+    func testActiveCeremonyDoesNotDisappearWhenFirstPhotoPersists() {
+        XCTAssertTrue(
+            OnboardingPolicy.shouldShowCeremony(
+                route: .app,
+                forcesPreview: false,
+                didDismissPreview: false,
+                sessionActive: true
+            )
+        )
+    }
 }

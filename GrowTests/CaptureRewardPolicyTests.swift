@@ -25,6 +25,14 @@ final class CaptureRewardPolicyTests: XCTestCase {
         XCTAssertEqual(CaptureRewardPolicy.futureReelProgress(frameCount: 45, targetFrameCount: 30), 1)
     }
 
+    func testFrameCountCopyUsesTheSingularForm() {
+        XCTAssertEqual(CaptureRewardPolicy.frameCountLabel(0), "0 frames")
+        XCTAssertEqual(CaptureRewardPolicy.frameCountLabel(1), "1 frame")
+        XCTAssertEqual(CaptureRewardPolicy.frameCountLabel(2), "2 frames")
+        XCTAssertEqual(CaptureRewardPolicy.capturedFrameCountLabel(1), "1 frame captured")
+        XCTAssertEqual(CaptureRewardPolicy.capturedFrameCountLabel(2), "2 frames captured")
+    }
+
     func testModeledGrowthStageBoundaries() {
         XCTAssertEqual(ModeledGrowthCurve.stage(for: 0.10), .germination)
         XCTAssertEqual(ModeledGrowthCurve.stage(for: 0.20), .seedling)

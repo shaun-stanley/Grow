@@ -34,9 +34,9 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - [x] Task 1: Add onboarding policy and coordinator with focused tests.
 - [x] Task 2: Add recoverable grow and photo persistence.
 - [x] Task 3: Extract shared guided camera and reward sequence.
-- [ ] Task 4: Build Promise, Choose, Setup, and sample-mode UI.
-- [ ] Task 5: Integrate Day-1 capture, reward, and completion routing.
-- [ ] Task 6: Complete accessibility, simulator QA, verification, commit, and push.
+- [x] Task 4: Build Promise, Choose, Setup, and sample-mode UI.
+- [x] Task 5: Integrate Day-1 capture, reward, and completion routing.
+- [ ] **Task 6: Complete accessibility, simulator QA, verification, commit, and push.** _(in progress)_
 
 ## Change Log
 
@@ -47,6 +47,15 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - 2026-07-12: Completed Task 2 with recoverable grow creation/deletion, scoped photo rollback, user-facing creation errors, 3 focused persistence tests, 30 full-suite tests, and the required simulator build passing.
 - 2026-07-12: Started Task 3, locking shared capture geometry and honest Day-1 camera copy before extraction.
 - 2026-07-12: Completed Task 3 with shared camera/reward entry views, tested Day-1/daily configuration, 32 full-suite tests, the required build, and seeded Day-2 screenshot plus semantic verification passing.
+- 2026-07-12: Started Task 4, enforcing the approved ceremony composition and persistence-free sample contract before SwiftUI assembly.
+- 2026-07-12: Completed Task 4 with Promise, Choose, Setup, and Sample screens verified at the default content size, deterministic debug launch routes, 34 full-suite tests, and the required simulator build passing.
+- 2026-07-12: Started Task 5 with explicit capture-failure and completion-eligibility tests before wiring camera, import, reward, and Today routing.
+- 2026-07-12: Completed Task 5 with live/import/simulator persistence paths, denied-camera Settings recovery, the real Day-1 reward, versioned completion routing, singular frame copy, 40 passing tests, and default-mode Capture, Reward, Today, and Reels screenshot/semantic verification.
+- 2026-07-12: Started Task 6. Default-mode clean basil/Kratky/simulator capture and completed Day-1 cross-tab consistency pass; Today, Capture, and Reels agree on Basil, Kratky, Day 1, one frame, and 3% reel progress.
+- 2026-07-12: Runtime logs contain no fatal/error/assert/crash entries. SwiftData stores a relative photo filename, 42 KB thumbnail, alignment metadata, and no full image bytes; the full 93 KB JPEG is durable and nonempty.
+- 2026-07-12: App Group source entitlement and identifier are correct, but the current simulator product is unsigned because the required CLI build used `CODE_SIGNING_ALLOWED=NO`; media therefore exercised the documented Documents fallback. A clean signed simulator rebuild is pending because the desktop approval quota currently rejects clean/Git operations.
+- 2026-07-12: Interruption after grow creation relaunches directly into Day-1 Capture. A real system Photos-picker import persists, remains in the ceremony for the earned reward, displays the imported 9:16 memory, and exposes one completion action. Added a regression test so persistence cannot bypass reward again.
+- 2026-07-12: Final source checkpoint currently has 40 tests passing, zero failures, successful XcodeBuildMCP build-and-run, clean `git diff --check`, and no stale placeholder or `1 frames` product copy.
 
 ## File Structure
 
@@ -578,7 +587,7 @@ In `GrowApp`, create and inject one `OnboardingCoordinator`. In `RootView`, add 
 
 - [ ] **Step 7: Verify UI in XcodeBuildMCP**
 
-Capture Promise, Choose, Setup, and Sample screenshots plus semantic snapshots on iPhone 17 Pro. Repeat Promise and Choose at Accessibility Large. Reject clipping, low contrast, invisible actions, nested-card styling, or generic questionnaire aesthetics.
+Capture Promise, Choose, Setup, and Sample screenshots plus semantic snapshots on iPhone 17 Pro at the default content size. Reject clipping, low contrast, invisible actions, nested-card styling, or generic questionnaire aesthetics.
 
 - [ ] **Step 8: Commit and push Task 4**
 
@@ -675,7 +684,7 @@ Verify clean basil/Kratky/simulator capture; lettuce/countertop/import; denied-c
 
 - [ ] **Step 5: Execute accessibility visual matrix**
 
-Verify standard and Accessibility Large text, Reduce Motion, Reduce Transparency, Increased Contrast, and Differentiate Without Color. Take XcodeBuildMCP screenshots and semantic snapshots for Promise, Choose, Setup, Capture, Reward, and Today.
+Verify the default content size, Reduce Motion, Reduce Transparency, Increased Contrast, and Differentiate Without Color. Take XcodeBuildMCP screenshots and semantic snapshots for Promise, Choose, Setup, Capture, Reward, and Today. Accessibility Large visual testing is intentionally excluded per the user’s 2026-07-12 direction.
 
 - [ ] **Step 6: Inspect runtime logs and durable media**
 

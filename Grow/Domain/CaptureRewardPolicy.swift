@@ -45,6 +45,14 @@ enum CaptureRewardPolicy {
         return min(1, max(0, Double(frameCount) / Double(targetFrameCount)))
     }
 
+    static func frameCountLabel(_ count: Int) -> String {
+        "\(count) \(count == 1 ? "frame" : "frames")"
+    }
+
+    static func capturedFrameCountLabel(_ count: Int) -> String {
+        "\(frameCountLabel(count)) captured"
+    }
+
     static func caption(dayIndex: Int, alignment: CaptureAlignment) -> String {
         "\(alignment.percent)% aligned - \(alignment.adjective). \(alignment.sourceLabel) for Day \(dayIndex)."
     }

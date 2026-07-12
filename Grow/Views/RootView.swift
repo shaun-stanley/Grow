@@ -7,9 +7,36 @@ struct RootView: View {
     @Environment(PlantCatalogService.self) private var catalog
     @Environment(StreakService.self) private var streakService
     @Environment(WidgetSyncService.self) private var widgetSyncService
+    @Environment(OnboardingCoordinator.self) private var onboardingCoordinator
+    @AppStorage(OnboardingPolicy.completedVersionKey) private var completedOnboardingVersion = 0
+    @Query(
+        filter: #Predicate<Grow> { $0.isActive && $0.archivedDate == nil },
+        sort: \Grow.startDate, order: .reverse
+    ) private var activeGrows: [Grow]
     @State private var selectedTab: GrowTab = RootView.initialTab
+    @State private var didDismissForcedFirstSeed = false
+    @State private var ceremonySessionActive = false
 
     var body: some View {
+        Group {
+            if showsFirstSeedFlow {
+                FirstSeedFlow(
+                    initialStep: initialOnboardingStep,
+                    onCompleted: completeOnboarding
+                )
+            } else {
+                appTabs
+            }
+        }
+        .task {
+            prepareDebugOnboardingIfRequested()
+            latchCeremonySessionIfNeeded()
+            completeResumedOnboardingIfNeeded()
+            syncActiveGrowSnapshot()
+        }
+    }
+
+    private var appTabs: some View {
         TabView(selection: $selectedTab) {
             Tab("Today", systemImage: "leaf", value: .today) { HomeTwinScreen() }
             Tab("Care", systemImage: "drop", value: .care) { TodayScreen() }
@@ -18,9 +45,35 @@ struct RootView: View {
             Tab("Dex", systemImage: "square.grid.2x2", value: .dex) { DexScreen() }
         }
         .tint(GrowPalette.sprout600)
-        .task {
-            syncActiveGrowSnapshot()
-        }
+    }
+
+    private var launchRoute: OnboardingLaunchRoute {
+        let activeGrow = activeGrows.first
+        return OnboardingPolicy.launchRoute(
+            completedVersion: completedOnboardingVersion,
+            hasActiveGrow: activeGrow != nil,
+            activePhotoCount: activeGrow?.photos?.count ?? 0
+        )
+    }
+
+    private var showsFirstSeedFlow: Bool {
+        OnboardingPolicy.shouldShowCeremony(
+            route: launchRoute,
+            forcesPreview: Self.forcesFirstSeedFlow,
+            didDismissPreview: didDismissForcedFirstSeed,
+            sessionActive: ceremonySessionActive
+        )
+    }
+
+    private var initialOnboardingStep: OnboardingStep {
+        Self.requestedOnboardingStep
+            ?? (launchRoute == .resumeCapture ? .capture : .promise)
+    }
+
+    private func completeOnboarding() {
+        completedOnboardingVersion = OnboardingPolicy.currentVersion
+        didDismissForcedFirstSeed = true
+        ceremonySessionActive = false
     }
 
     private func syncActiveGrowSnapshot() {
@@ -36,6 +89,54 @@ struct RootView: View {
         if CommandLine.arguments.contains("-openReels") { return .reels }
         if CommandLine.arguments.contains("-openCapture") { return .capture }
         return .today
+    }
+
+    private static var forcesFirstSeedFlow: Bool {
+        CommandLine.arguments.contains("-openFirstSeed") || requestedOnboardingStep != nil
+    }
+
+    private static var requestedOnboardingStep: OnboardingStep? {
+        guard let flagIndex = CommandLine.arguments.firstIndex(of: "-firstSeedStep"),
+              CommandLine.arguments.indices.contains(flagIndex + 1) else {
+            return nil
+        }
+
+        return switch CommandLine.arguments[flagIndex + 1] {
+        case "promise": .promise
+        case "crop": .crop
+        case "setup": .setup
+        case "capture": .capture
+        case "reward": .reward
+        case "sample": .sample
+        default: nil
+        }
+    }
+
+    private func prepareDebugOnboardingIfRequested() {
+        #if DEBUG
+        if CommandLine.arguments.contains("-resetOnboarding") {
+            completedOnboardingVersion = 0
+        }
+        #endif
+    }
+
+    private func latchCeremonySessionIfNeeded() {
+        if OnboardingPolicy.shouldShowCeremony(
+            route: launchRoute,
+            forcesPreview: Self.forcesFirstSeedFlow,
+            didDismissPreview: didDismissForcedFirstSeed
+        ) {
+            ceremonySessionActive = true
+        }
+    }
+
+    private func completeResumedOnboardingIfNeeded() {
+        guard completedOnboardingVersion < OnboardingPolicy.currentVersion,
+              let activeGrow = activeGrows.first,
+              !(activeGrow.photos ?? []).isEmpty else {
+            return
+        }
+        completedOnboardingVersion = OnboardingPolicy.currentVersion
     }
 }
 

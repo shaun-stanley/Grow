@@ -11,6 +11,7 @@ struct GrowApp: App {
     @State private var notificationService: NotificationService
     @State private var widgetSyncService: WidgetSyncService
     @State private var reelRenderingService: ReelRenderingService
+    @State private var onboardingCoordinator: OnboardingCoordinator
 
     init() {
         let catalog = PlantCatalogService()
@@ -20,6 +21,7 @@ struct GrowApp: App {
         let notificationService = NotificationService()
         let widgetSyncService = WidgetSyncService()
         let reelRenderingService = ReelRenderingService(context: modelContainer.mainContext)
+        let onboardingCoordinator = OnboardingCoordinator()
         _catalog = State(initialValue: catalog)
         _store = State(initialValue: store)
         _streakService = State(initialValue: streakService)
@@ -27,8 +29,23 @@ struct GrowApp: App {
         _notificationService = State(initialValue: notificationService)
         _widgetSyncService = State(initialValue: widgetSyncService)
         _reelRenderingService = State(initialValue: reelRenderingService)
+        _onboardingCoordinator = State(initialValue: onboardingCoordinator)
 
         let launchArguments = CommandLine.arguments
+        #if DEBUG
+        if launchArguments.contains("-resetOnboarding") {
+            try? store.resetDebugSampleData()
+            UserDefaults.standard.set(0, forKey: OnboardingPolicy.completedVersionKey)
+        }
+        Self.seedOnboardingPreviewIfRequested(
+            arguments: launchArguments,
+            store: store,
+            catalog: catalog,
+            photoService: photoService,
+            coordinator: onboardingCoordinator
+        )
+        #endif
+
         // Debug-only: seed a grown specimen so the active "spread" can be reviewed.
         if launchArguments.contains("-seedSampleGrow"), store.activeGrows().isEmpty {
             if let grow = try? store.createGrow(speciesID: "basil", nickname: "Genovese Basil", system: .kratky) {
@@ -85,6 +102,7 @@ struct GrowApp: App {
                 .environment(notificationService)
                 .environment(widgetSyncService)
                 .environment(reelRenderingService)
+                .environment(onboardingCoordinator)
                 .tint(GrowPalette.accent)
         }
         .modelContainer(modelContainer)
@@ -125,4 +143,40 @@ struct GrowApp: App {
         try? store.save()
         #endif
     }
+
+    #if DEBUG
+    private static func seedOnboardingPreviewIfRequested(
+        arguments: [String],
+        store: GrowStore,
+        catalog: PlantCatalogService,
+        photoService: PhotoService,
+        coordinator: OnboardingCoordinator
+    ) {
+        guard let rawStep = launchValue(after: "-firstSeedStep", in: arguments),
+              rawStep == "capture" || rawStep == "reward" else {
+            return
+        }
+
+        let grow: Grow
+        if let existing = store.activeGrows().first {
+            grow = existing
+        } else if let created = try? store.createGrow(
+            speciesID: OnboardingPolicy.defaultSpeciesID,
+            nickname: "",
+            system: .kratky
+        ) {
+            grow = created
+        } else {
+            return
+        }
+
+        coordinator.didCreateGrow(id: grow.id)
+        guard rawStep == "reward" else { return }
+        let reward = photoService.recordPrototypeCapture(
+            for: grow,
+            species: catalog.species(id: grow.speciesID)
+        )
+        coordinator.didCapture(reward)
+    }
+    #endif
 }

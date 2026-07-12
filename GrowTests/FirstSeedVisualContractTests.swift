@@ -18,4 +18,16 @@ final class FirstSeedVisualContractTests: XCTestCase {
         XCTAssertNil(configuration.ghostThumbnailData)
         XCTAssertEqual(configuration.guidance, "Center the jar inside the guide")
     }
+
+    func testCeremonyRejectsGenericQuestionnaireSlop() {
+        let checklist = FirstSeedVisualContract.antiSlopChecklist
+
+        XCTAssertTrue(checklist.contains("Apple native system typography only"))
+        XCTAssertTrue(checklist.contains("One primary action per beat"))
+        XCTAssertTrue(checklist.contains("Specimen-first composition"))
+        XCTAssertTrue(checklist.contains("No nested card stacks"))
+        XCTAssertTrue(checklist.contains("Bloom appears only after earned success"))
+        XCTAssertTrue(checklist.contains("Selection uses glyph and label"))
+        XCTAssertTrue(checklist.contains("Sample mode never persists"))
+    }
 }

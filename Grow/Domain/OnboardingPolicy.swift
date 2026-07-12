@@ -51,4 +51,13 @@ enum OnboardingPolicy {
         if hasActiveGrow { return activePhotoCount > 0 ? .app : .resumeCapture }
         return .ceremony
     }
+
+    static func shouldShowCeremony(
+        route: OnboardingLaunchRoute,
+        forcesPreview: Bool,
+        didDismissPreview: Bool,
+        sessionActive: Bool = false
+    ) -> Bool {
+        sessionActive || route != .app || (forcesPreview && !didDismissPreview)
+    }
 }
