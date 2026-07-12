@@ -16,6 +16,7 @@ struct RootView: View {
     @State private var selectedTab: GrowTab = RootView.initialTab
     @State private var didDismissForcedFirstSeed = false
     @State private var ceremonySessionActive = false
+    @State private var pendingDeepLink: DeepLinkDestination?
 
     var body: some View {
         Group {
@@ -34,6 +35,7 @@ struct RootView: View {
             completeResumedOnboardingIfNeeded()
             syncActiveGrowSnapshot()
         }
+        .onOpenURL(perform: handleDeepLink)
     }
 
     private var appTabs: some View {
@@ -74,6 +76,29 @@ struct RootView: View {
         completedOnboardingVersion = OnboardingPolicy.currentVersion
         didDismissForcedFirstSeed = true
         ceremonySessionActive = false
+        applyPendingDeepLinkIfNeeded()
+    }
+
+    private func handleDeepLink(_ url: URL) {
+        guard let destination = DeepLinkPolicy.destination(for: url) else { return }
+        guard !showsFirstSeedFlow else {
+            pendingDeepLink = destination
+            return
+        }
+        apply(destination)
+    }
+
+    private func applyPendingDeepLinkIfNeeded() {
+        guard let destination = pendingDeepLink else { return }
+        pendingDeepLink = nil
+        apply(destination)
+    }
+
+    private func apply(_ destination: DeepLinkDestination) {
+        selectedTab = switch destination {
+        case .today: .today
+        case .capture: .capture
+        }
     }
 
     private func syncActiveGrowSnapshot() {

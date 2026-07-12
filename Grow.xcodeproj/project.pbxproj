@@ -6,11 +6,17 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AA000000000000000000001E /* GrowWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001F /* GrowWidget.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		AA0000000000000000000004 /* Grow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Grow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000000000000000000010 /* Grow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Grow.entitlements; sourceTree = "<group>"; };
 		AA0000000000000000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA0000000000000000000012 /* GrowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GrowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000000000000000000001F /* GrowWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GrowWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000000000000000000002B /* GrowWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GrowWidget-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -22,6 +28,16 @@
 		AA0000000000000000000013 /* GrowTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = GrowTests;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000001D /* GrowShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GrowShared;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000020 /* GrowWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GrowWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -41,6 +57,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000021 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -48,8 +71,11 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000011 /* Info.plist */,
+				AA000000000000000000002B /* GrowWidget-Info.plist */,
 				AA0000000000000000000010 /* Grow.entitlements */,
 				AA0000000000000000000005 /* Grow */,
+				AA000000000000000000001D /* GrowShared */,
+				AA0000000000000000000020 /* GrowWidget */,
 				AA0000000000000000000013 /* GrowTests */,
 				AA0000000000000000000003 /* Products */,
 			);
@@ -60,6 +86,7 @@
 			children = (
 				AA0000000000000000000004 /* Grow.app */,
 				AA0000000000000000000012 /* GrowTests.xctest */,
+				AA000000000000000000001F /* GrowWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,13 +101,16 @@
 				AA0000000000000000000007 /* Sources */,
 				AA0000000000000000000008 /* Frameworks */,
 				AA0000000000000000000009 /* Resources */,
+				AA0000000000000000000024 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AA0000000000000000000027 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AA0000000000000000000005 /* Grow */,
+				AA000000000000000000001D /* GrowShared */,
 			);
 			name = Grow;
 			packageProductDependencies = (
@@ -112,6 +142,29 @@
 			productReference = AA0000000000000000000012 /* GrowTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		AA0000000000000000000025 /* GrowWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000028 /* Build configuration list for PBXNativeTarget "GrowWidget" */;
+			buildPhases = (
+				AA0000000000000000000022 /* Sources */,
+				AA0000000000000000000021 /* Frameworks */,
+				AA0000000000000000000023 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AA0000000000000000000020 /* GrowWidget */,
+				AA000000000000000000001D /* GrowShared */,
+			);
+			name = GrowWidget;
+			packageProductDependencies = (
+			);
+			productName = GrowWidget;
+			productReference = AA000000000000000000001F /* GrowWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -128,6 +181,9 @@
 					AA0000000000000000000017 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = AA0000000000000000000006;
+					};
+					AA0000000000000000000025 = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -147,9 +203,24 @@
 			targets = (
 				AA0000000000000000000006 /* Grow */,
 				AA0000000000000000000017 /* GrowTests */,
+				AA0000000000000000000025 /* GrowWidget */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA0000000000000000000024 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AA000000000000000000001E /* GrowWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */
 		AA0000000000000000000009 /* Resources */ = {
@@ -160,6 +231,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AA0000000000000000000015 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000023 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -183,6 +261,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000022 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXContainerItemProxy section */
@@ -193,6 +278,13 @@
 			remoteGlobalIDString = AA0000000000000000000006;
 			remoteInfo = Grow;
 		};
+		AA0000000000000000000026 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000025;
+			remoteInfo = GrowWidget;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXTargetDependency section */
@@ -200,6 +292,11 @@
 			isa = PBXTargetDependency;
 			target = AA0000000000000000000006 /* Grow */;
 			targetProxy = AA0000000000000000000019 /* PBXContainerItemProxy */;
+		};
+		AA0000000000000000000027 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000025 /* GrowWidget */;
+			targetProxy = AA0000000000000000000026 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -393,6 +490,69 @@
 			};
 			name = Release;
 		};
+		AA0000000000000000000029 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = GrowWidget/GrowWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "GrowWidget-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sviftstudios.Grow.GrowWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA000000000000000000002A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = GrowWidget/GrowWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "GrowWidget-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sviftstudios.Grow.GrowWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -419,6 +579,15 @@
 			buildConfigurations = (
 				AA000000000000000000001A /* Debug */,
 				AA000000000000000000001B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000028 /* Build configuration list for PBXNativeTarget "GrowWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000029 /* Debug */,
+				AA000000000000000000002A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

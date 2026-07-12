@@ -4,32 +4,6 @@ import Observation
 import WidgetKit
 #endif
 
-struct WidgetGrowSnapshot: Codable, Equatable {
-    let schemaVersion: Int
-    let generatedAt: Date
-    let activeGrowID: UUID
-    let speciesID: String
-    let displayName: String
-    let latinName: String?
-    let emoji: String?
-    let systemName: String
-    let stageRaw: String
-    let stageDisplayName: String
-    let stageSystemImage: String
-    let dayCount: Int
-    let frameCount: Int
-    let targetFrameCount: Int
-    let futureReelProgress: Double
-    let modeledProgress: Double
-    let streakCurrent: Int
-    let streakLongest: Int
-    let streakMilestoneCopy: String
-    let nextCaptureTitle: String
-    let nextCaptureBody: String
-    let latestPhotoFileName: String?
-    let latestCapturedAt: Date?
-}
-
 struct WidgetSyncValidation: Equatable {
     let checkedAt: Date
     let isUsingAppGroupContainer: Bool
@@ -45,15 +19,8 @@ struct WidgetSyncValidation: Equatable {
 @MainActor
 @Observable
 final class WidgetSyncService {
-    private enum Keys {
-        static let activeGrowSnapshot = "widget.activeGrowSnapshot"
-        static let activeGrowID = "widget.activeGrowID"
-        static let validationStamp = "widget.validationStamp"
-    }
-
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
     private let fileManager: FileManager
 
     var latestSnapshot: WidgetGrowSnapshot?
@@ -69,8 +36,8 @@ final class WidgetSyncService {
     func validateSharedStorage() -> WidgetSyncValidation {
         let checkedAt = Date()
         let defaultsValue = checkedAt.timeIntervalSince1970
-        defaults.set(defaultsValue, forKey: Keys.validationStamp)
-        let canWriteDefaults = defaults.double(forKey: Keys.validationStamp) == defaultsValue
+        defaults.set(defaultsValue, forKey: WidgetSnapshotKeys.validationStamp)
+        let canWriteDefaults = defaults.double(forKey: WidgetSnapshotKeys.validationStamp) == defaultsValue
 
         let validationDirectory = AppGroup.containerURL.appendingPathComponent("Widget", isDirectory: true)
         let validationFile = validationDirectory.appendingPathComponent("validation.txt")
@@ -112,8 +79,8 @@ final class WidgetSyncService {
 
         do {
             let data = try encoder.encode(snapshot)
-            defaults.set(data, forKey: Keys.activeGrowSnapshot)
-            defaults.set(snapshot.activeGrowID.uuidString, forKey: Keys.activeGrowID)
+            defaults.set(data, forKey: WidgetSnapshotKeys.activeGrowSnapshot)
+            defaults.set(snapshot.activeGrowID.uuidString, forKey: WidgetSnapshotKeys.activeGrowID)
             latestSnapshot = snapshot
             reloadWidgetTimelines()
         } catch {
@@ -130,15 +97,14 @@ final class WidgetSyncService {
     }
 
     func clearActiveGrow() {
-        defaults.removeObject(forKey: Keys.activeGrowSnapshot)
-        defaults.removeObject(forKey: Keys.activeGrowID)
+        defaults.removeObject(forKey: WidgetSnapshotKeys.activeGrowSnapshot)
+        defaults.removeObject(forKey: WidgetSnapshotKeys.activeGrowID)
         latestSnapshot = nil
         reloadWidgetTimelines()
     }
 
     func readActiveGrowSnapshot() -> WidgetGrowSnapshot? {
-        guard let data = defaults.data(forKey: Keys.activeGrowSnapshot) else { return nil }
-        return try? decoder.decode(WidgetGrowSnapshot.self, from: data)
+        WidgetSnapshotReader(defaults: defaults).read()
     }
 
     private func makeSnapshot(grow: Grow, species: PlantSpecies?, streak: StreakUpdate) -> WidgetGrowSnapshot {
