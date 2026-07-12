@@ -33,7 +33,7 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 
 - [x] Task 1: Add onboarding policy and coordinator with focused tests.
 - [x] Task 2: Add recoverable grow and photo persistence.
-- [ ] **Task 3: Extract shared guided camera and reward sequence.** _(in progress)_
+- [x] Task 3: Extract shared guided camera and reward sequence.
 - [ ] Task 4: Build Promise, Choose, Setup, and sample-mode UI.
 - [ ] Task 5: Integrate Day-1 capture, reward, and completion routing.
 - [ ] Task 6: Complete accessibility, simulator QA, verification, commit, and push.
@@ -46,6 +46,7 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - 2026-07-12: Started Task 2, making grow and photo persistence recoverable before UI integration.
 - 2026-07-12: Completed Task 2 with recoverable grow creation/deletion, scoped photo rollback, user-facing creation errors, 3 focused persistence tests, 30 full-suite tests, and the required simulator build passing.
 - 2026-07-12: Started Task 3, locking shared capture geometry and honest Day-1 camera copy before extraction.
+- 2026-07-12: Completed Task 3 with shared camera/reward entry views, tested Day-1/daily configuration, 32 full-suite tests, the required build, and seeded Day-2 screenshot plus semantic verification passing.
 
 ## File Structure
 

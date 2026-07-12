@@ -61,11 +61,16 @@ struct CaptureScreen: View {
         }
         .sheet(isPresented: $isShowingCamera) {
             if let grow = grows.first {
-                PlantCameraView(
-                    speciesName: catalog.species(id: grow.speciesID)?.commonName ?? "Plant",
-                    frameCount: (grow.photos ?? []).count + 1,
-                    latestThumbnailData: (grow.photos ?? []).sorted { $0.capturedAt < $1.capturedAt }.last?.thumbnailData,
-                    currentProgress: ModeledGrowthCurve.progress(dayIndex: max(1, grow.dayCount), species: catalog.species(id: grow.speciesID)),
+                GuidedPlantCameraView(
+                    configuration: .daily(
+                        speciesName: catalog.species(id: grow.speciesID)?.commonName ?? "Plant",
+                        frameCount: (grow.photos ?? []).count + 1,
+                        ghostThumbnailData: (grow.photos ?? []).sorted { $0.capturedAt < $1.capturedAt }.last?.thumbnailData,
+                        progress: ModeledGrowthCurve.progress(
+                            dayIndex: max(1, grow.dayCount),
+                            species: catalog.species(id: grow.speciesID)
+                        )
+                    ),
                     onCapture: { data in
                         isShowingCamera = false
                         recordImageData(data, for: grow)
@@ -279,7 +284,7 @@ private struct CaptureWorkspace: View {
     @ViewBuilder
     private var rewardPanel: some View {
         if let reward = lastReward {
-            RewardSequenceView(reward: reward)
+            CaptureRewardSequenceView(reward: reward)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
             QuietCapturePrompt(dayCount: grow.dayCount)
@@ -465,7 +470,7 @@ private enum CaptureScrollTarget: Hashable {
     case futureReel
 }
 
-private struct RewardSequenceView: View {
+struct CaptureRewardSequenceContent: View {
     let reward: CaptureReward
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var revealStage = 0
@@ -1055,11 +1060,8 @@ private struct CaptureReticle: View {
     }
 }
 
-private struct PlantCameraView: View {
-    let speciesName: String
-    let frameCount: Int
-    let latestThumbnailData: Data?
-    let currentProgress: Double
+struct GuidedPlantCameraContent: View {
+    let configuration: GuidedPlantCameraConfiguration
     var onCapture: (Data) -> Void
     var onCancel: () -> Void
 
@@ -1080,7 +1082,8 @@ private struct PlantCameraView: View {
                     .transition(.opacity)
             }
 
-            if let latestThumbnailData, let image = UIImage(data: latestThumbnailData) {
+            if let ghostThumbnailData = configuration.ghostThumbnailData,
+               let image = UIImage(data: ghostThumbnailData) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
@@ -1092,10 +1095,11 @@ private struct PlantCameraView: View {
             }
 
             CameraGuideOverlay(
-                progress: currentProgress,
-                frameCount: frameCount,
-                speciesName: speciesName,
-                hasGhostGuide: latestThumbnailData != nil
+                title: configuration.title,
+                guidance: configuration.guidance,
+                progress: configuration.currentProgress,
+                speciesName: configuration.speciesName,
+                hasGhostGuide: configuration.ghostThumbnailData != nil
             )
                 .padding(.horizontal, GrowSpacing.lg)
                 .padding(.top, GrowSpacing.lg)
@@ -1155,7 +1159,7 @@ private struct PlantCameraView: View {
 
     private var cameraStatusView: some View {
         VStack(spacing: GrowSpacing.md) {
-            SpecimenJar(progress: currentProgress, size: 160)
+            SpecimenJar(progress: configuration.currentProgress, size: 160)
                 .opacity(0.9)
 
             VStack(spacing: GrowSpacing.xs) {
@@ -1215,8 +1219,9 @@ private final class PreviewHostView: UIView {
 }
 
 private struct CameraGuideOverlay: View {
+    let title: String
+    let guidance: String
     let progress: Double
-    let frameCount: Int
     let speciesName: String
     let hasGhostGuide: Bool
 
@@ -1224,7 +1229,7 @@ private struct CameraGuideOverlay: View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Frame \(frameCount)").fieldLabel(color: .white.opacity(0.72))
+                    Text(title).fieldLabel(color: .white.opacity(0.72))
                     Text(speciesName)
                         .font(GrowType.headline())
                         .foregroundStyle(.white)
@@ -1243,7 +1248,7 @@ private struct CameraGuideOverlay: View {
                 VStack(spacing: GrowSpacing.xs) {
                     Image(systemName: "scope")
                         .font(.system(size: 22, weight: .semibold))
-                    Text("Same angle")
+                    Text(guidance)
                         .font(GrowType.caption(.semibold))
                     if hasGhostGuide {
                         Text("Ghost guide on")

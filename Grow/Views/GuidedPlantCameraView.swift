@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 struct GuidedPlantCameraConfiguration: Equatable {
     let title: String
@@ -34,6 +35,20 @@ struct GuidedPlantCameraConfiguration: Equatable {
             frameCount: frameCount,
             ghostThumbnailData: ghostThumbnailData,
             currentProgress: progress
+        )
+    }
+}
+
+struct GuidedPlantCameraView: View {
+    let configuration: GuidedPlantCameraConfiguration
+    var onCapture: (Data) -> Void
+    var onCancel: () -> Void
+
+    var body: some View {
+        GuidedPlantCameraContent(
+            configuration: configuration,
+            onCapture: onCapture,
+            onCancel: onCancel
         )
     }
 }
