@@ -73,6 +73,8 @@ final class GrowPhoto {
     var alignmentData: Data?
     var caption: String = ""
     var isMilestone: Bool = false
+    var originRaw: String = GrowPhotoOrigin.legacyUserMedia.rawValue
+    var sourceSampleID: String?
 
     var grow: Grow?
 
@@ -85,6 +87,11 @@ final class GrowPhoto {
     var stage: GrowStage {
         get { GrowStage(rawValue: stageRaw) ?? .germination }
         set { stageRaw = newValue.rawValue }
+    }
+
+    var origin: GrowPhotoOrigin {
+        get { GrowPhotoOrigin(rawValue: originRaw) ?? .legacyUserMedia }
+        set { originRaw = newValue.rawValue }
     }
 }
 

@@ -60,7 +60,7 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - Produces: `GrowPhotoOrigin`, `GrowPhotoProvenance`, `GrowPhotoQuality`, `GrowPhotoOrdering.areInIncreasingOrder(_:_:)`, `GrowPhoto.origin`.
 - Consumes: existing `GrowPhoto.id`, `dayIndex`, and `capturedAt`.
 
-- [ ] **Step 1: Write failing origin and ordering tests**
+- [x] **Step 1: Write failing origin and ordering tests**
 
 Create `GrowTests/GrowPhotoOriginTests.swift`:
 
@@ -124,7 +124,7 @@ final class GrowPhotoOriginTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run the focused tests and verify RED**
+- [x] **Step 2: Run the focused tests and verify RED**
 
 Run with XcodeBuildMCP:
 
@@ -134,7 +134,7 @@ test_sim(extraArgs: ["-only-testing:GrowTests/GrowPhotoOriginTests"])
 
 Expected: compile failure because `GrowPhotoOrigin`, `origin`, and `GrowPhotoOrdering` do not exist.
 
-- [ ] **Step 3: Implement origin, provenance, quality, and ordering**
+- [x] **Step 3: Implement origin, provenance, quality, and ordering**
 
 Create `Grow/Models/GrowPhotoOrigin.swift`:
 
@@ -184,7 +184,7 @@ var origin: GrowPhotoOrigin {
 }
 ```
 
-- [ ] **Step 4: Run focused and full tests**
+- [x] **Step 4: Run focused and full tests**
 
 Run the focused test, then `test_sim()` through XcodeBuildMCP.
 

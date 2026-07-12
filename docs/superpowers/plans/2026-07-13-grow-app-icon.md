@@ -136,7 +136,7 @@ git diff --check
 git status --short --branch
 ```
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add Grow/Assets.xcassets/AppIcon.appiconset GrowTests/AppIconContractTests.swift docs/superpowers/plans/2026-07-13-grow-app-icon.md
