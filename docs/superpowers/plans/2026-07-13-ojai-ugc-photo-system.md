@@ -465,14 +465,14 @@ Use case: photorealistic-natural
 Asset type: portrait iPhone UGC source for an iOS hydroponic grow journal and 9:16 reel
 Primary request: the first frame of one affluent but understated California woman's month-long basil grow, before the shoot emerges
 Scene/backdrop: sun-washed Ojai kitchen, softly imperfect warm limewash wall, pale oak counter, cream linen curtain at frame left, handmade off-white ceramic catch tray
-Subject: one amber glass Kratky jar in the exact center-lower portion of frame, black net cup, clean water, basil seed just planted, no visible green shoot
+Subject: one amber glass Kratky jar in the exact center-lower portion of frame; black net cup holding one compact warm-tan coir starter plug; basil seed slightly recessed in the plug; no visible green shoot; the nutrient solution visibly wets the lower portion of the plug
 Style/medium: believable elevated iPhone 17 Pro camera-roll photograph, not commercial advertising
 Composition/framing: portrait 9:16, fixed eye-level camera anchor, vessel fully visible, subject inside central 70 percent width and central 80 percent height, negative space above for day overlay
 Lighting/mood: soft cool early-morning window light, quiet optimism, slight realistic exposure falloff
 Color palette: limewash cream, pale oak, amber glass, restrained healthy green only if naturally present in a tiny background herb
-Materials/textures: real glass refraction, subtle water line, oak grain, rumpled linen, imperfect handmade ceramic
-Constraints: establish immutable vessel shape, counter grain, curtain folds, wall texture, camera lens and perspective for every later frame; no face; no text; no logo; no watermark
-Avoid: glossy product lighting, HDR halos, fake portrait blur, soil inside the jar, plastic leaves, extra vessels, impossible reflections, duplicated objects
+Materials/textures: real glass refraction, clearly readable nutrient line, fibrous compressed coir plug with a subtly darker wetted base, oak grain, rumpled linen, imperfect handmade ceramic
+Constraints: establish immutable vessel shape, coir plug geometry and position, initial nutrient contact depth, counter grain, curtain folds, wall texture, camera lens and perspective for every later frame; no face; no text; no logo; no watermark
+Avoid: empty net cup, loose seed in plastic basket, unexplained pale object, submerged whole plug, glossy product lighting, HDR halos, fake portrait blur, soil inside the jar, plastic leaves, extra vessels, impossible reflections, duplicated objects
 ```
 
 Inspect the generated image for the approved invariants. Copy the selected built-in output to `DesignSources/OjaiBasil/ojai-basil-setup.png`.
@@ -483,17 +483,18 @@ For each row, edit the immediately preceding approved source image with the buil
 
 ```text
 Input image: edit target and continuity reference.
-Preserve exactly: amber jar geometry and blemishes, net cup, ceramic tray, oak grain, wall texture, curtain folds, lens, camera height, perspective, and overall composition.
-Change only: the listed plant growth, light variation, and listed human/lifestyle detail.
+Preserve exactly: amber jar geometry and blemishes, net cup, compact coir plug geometry and position, ceramic tray, oak grain, wall texture, curtain folds, lens, camera height, perspective, and overall composition.
+Change only: the listed plant growth, gradual nutrient-level progression, light variation, and listed human/lifestyle detail.
 Keep the basil botanically plausible and continuous with the preceding frame.
-No face, text, logo, watermark, soil, extra jar, duplicated leaves, merged fingers, or artificial HDR.
+The early nutrient line wets the plug's lower portion; as roots develop, lower it gradually below the net cup to create a plausible air gap.
+No empty basket, loose seed, face, text, logo, watermark, soil, extra jar, duplicated leaves, merged fingers, or artificial HDR.
 ```
 
 | Output | Change only |
 |---|---|
-| `ojai-basil-day-01.png` | One barely visible germination cue; a cream linen cuff and two fingertips gently steady the net cup; cool morning light. |
-| `ojai-basil-day-02.png` | Near-identical plant with a minuscule emerging pale-green hook; remove hand; shift exposure by less than one third stop. |
-| `ojai-basil-day-03.png` | Two small cotyledons open above the net cup; fine pale roots just visible through amber glass; soft overcast light. |
+| `ojai-basil-day-01.png` | Same coir plug and initial nutrient contact; one barely visible germination cue; a cream linen cuff and two fingertips gently steady the net cup; cool morning light. |
+| `ojai-basil-day-02.png` | Same coir plug and near-identical nutrient level; minuscule emerging pale-green hook; remove hand; shift exposure by less than one third stop. |
+| `ojai-basil-day-03.png` | Two small cotyledons open above the net cup; fine pale roots just visible through amber glass; nutrient line begins its gradual drop; soft overcast light. |
 | `ojai-basil-day-05.png` | First true leaf pair appears; roots lengthen naturally; half-finished handmade coffee cup enters far-right background, softly out of focus. |
 | `ojai-basil-day-07.png` | Healthy first-week seedling with two cotyledons and two true-leaf pairs; slim vintage gold bracelet and linen sleeve near jar without touching plant; bright late-morning sun. |
 | `ojai-basil-day-10.png` | One additional leaf pair and early branching cue; hand absent; subtle sun stripe moves across counter. |
@@ -548,7 +549,7 @@ After inspecting the four crop previews for every master, adjust only the focal-
 Create English catalog entries with this exact copy:
 
 ```text
-demo_ojai_setup_accessibility = "Setup sample photo of an amber hydroponic jar and basil seed on a pale oak counter."
+demo_ojai_setup_accessibility = "Setup sample photo of an amber hydroponic jar with a basil seed in a coir starter plug on a pale oak counter."
 demo_ojai_day_01_accessibility = "Day 1 sample photo of a newly planted basil seed in an amber hydroponic jar."
 demo_ojai_day_02_accessibility = "Day 2 sample photo of the first tiny basil sprout in an amber hydroponic jar."
 demo_ojai_day_03_accessibility = "Day 3 sample photo of basil cotyledons opening above an amber hydroponic jar."

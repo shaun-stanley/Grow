@@ -27,7 +27,7 @@ The bundled demo content follows one woman's basil grow across 30 days in a sun-
 
 The basil must progress botanically and spatially without resets:
 
-1. Seed or net-cup setup with no visible shoot.
+1. Basil seed seated in a compact warm-tan coir starter plug inside the net cup, with no visible shoot.
 2. Emerging radicle or germination cue where photographically plausible.
 3. Cotyledons.
 4. First true leaves.
@@ -41,6 +41,14 @@ The basil must progress botanically and spatially without resets:
 12. Final harvested basil beside the still-recognizable vessel.
 
 Leaf count, stem geometry, root development, vessel marks, countertop grain, background objects, and light direction must remain coherent from frame to frame. Later images are derived from the last approved frame rather than independently generated from text.
+
+### Hydroponic physical continuity
+
+- The seed is never shown loose inside an empty plastic basket. A single compact coir propagation plug fills the center of the black net cup and remains the same shape, color, and position throughout the story.
+- In setup and the earliest frames, the nutrient solution visibly reaches the lower portion of the starter plug so capillary action can keep it moist.
+- As roots emerge and lengthen, the nutrient line drops gradually below the net cup, leaving an expanding humid air gap. Later roots extend naturally from the plug toward and into the solution.
+- The plug may darken slightly where wet but must never read as loose soil, decorative gravel, or an unexplained pale object.
+- Water-level progression, plug wetness, and root length are continuity invariants reviewed alongside leaf and stem growth.
 
 ### Image character
 
@@ -57,7 +65,7 @@ The app ships twelve portrait master photographs under one versioned sample stor
 
 | Identifier | Story moment | Primary use |
 |---|---|---|
-| `ojai-basil-setup` | Net cup and seed setup | Empty/sample capture invitation |
+| `ojai-basil-setup` | Coir starter plug and seed setup | Empty/sample capture invitation |
 | `ojai-basil-day-01` | First saved frame | Onboarding and Day 1 memory |
 | `ojai-basil-day-02` | Near-identical early frame | Early reward and continuity QA |
 | `ojai-basil-day-03` | Cotyledon cue | Day 3 streak milestone |
