@@ -7,6 +7,8 @@ enum FirstSeedVisualContract {
     static let outerSpacing: CGFloat = 24
     static let launchCropCount = 3
     static let launchSetupCount = 3
+    static let cameraHeaderLeadingClearance: CGFloat = 56
+    static let cameraHeaderTrailingClearance: CGFloat = 112
 
     static let antiSlopChecklist = [
         "Apple native system typography only",

@@ -36,7 +36,7 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - [x] Task 3: Extract shared guided camera and reward sequence.
 - [x] Task 4: Build Promise, Choose, Setup, and sample-mode UI.
 - [x] Task 5: Integrate Day-1 capture, reward, and completion routing.
-- [ ] **Task 6: Complete accessibility, simulator QA, verification, commit, and push.** _(in progress)_
+- [x] Task 6: Complete accessibility, simulator QA, verification, commit, and push.
 
 ## Change Log
 
@@ -56,6 +56,11 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - 2026-07-12: App Group source entitlement and identifier are correct, but the current simulator product is unsigned because the required CLI build used `CODE_SIGNING_ALLOWED=NO`; media therefore exercised the documented Documents fallback. A clean signed simulator rebuild is pending because the desktop approval quota currently rejects clean/Git operations.
 - 2026-07-12: Interruption after grow creation relaunches directly into Day-1 Capture. A real system Photos-picker import persists, remains in the ceremony for the earned reward, displays the imported 9:16 memory, and exposes one completion action. Added a regression test so persistence cannot bypass reward again.
 - 2026-07-12: Final source checkpoint currently has 40 tests passing, zero failures, successful XcodeBuildMCP build-and-run, clean `git diff --check`, and no stale placeholder or `1 frames` product copy.
+- 2026-07-12: Clean signed simulator QA proved App Group durability end to end: SwiftData and the matching nonempty full JPEG live under `group.com.sviftstudios.Grow`, while the model record retains only a relative filename, 42 KB thumbnail, and alignment metadata. No new Documents fallback file was created.
+- 2026-07-12: At the default content size, Reduce Motion, Reduce Transparency, Increased Contrast, and Differentiate Without Color preserve readable reward and crop-selection layouts; selected state remains glyph plus label plus VoiceOver value. Simulator preferences were restored afterward.
+- 2026-07-12: Added a DEBUG-only denied-camera scenario and focused test. Visual QA confirmed Settings and import recovery actions, then caught and fixed shared camera-header overlap with a tested 44-point-plus clearance contract.
+- 2026-07-12: Lettuce plus countertop/DWC plus real Photos-picker import reaches the earned Day-1 reward and Today with consistent crop/system data. Sample mode remains persistence-free with zero Grow and GrowPhoto rows.
+- 2026-07-12: Completed Task 6 with 42 passing tests, the exact required build, a clean signed XcodeBuildMCP run, default-size screenshots and semantic snapshots, clean runtime logs, App Group durability proof, and clean repository checks. Simulator restored to standard content size and the Promise screen.
 
 ## File Structure
 

@@ -30,4 +30,15 @@ final class FirstSeedVisualContractTests: XCTestCase {
         XCTAssertTrue(checklist.contains("Selection uses glyph and label"))
         XCTAssertTrue(checklist.contains("Sample mode never persists"))
     }
+
+    func testCameraHeaderClearsFunctionalChrome() {
+        XCTAssertGreaterThanOrEqual(
+            FirstSeedVisualContract.cameraHeaderLeadingClearance,
+            GrowSpacing.touchTargetMin + GrowSpacing.sm
+        )
+        XCTAssertGreaterThanOrEqual(
+            FirstSeedVisualContract.cameraHeaderTrailingClearance,
+            104
+        )
+    }
 }

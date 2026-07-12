@@ -42,6 +42,18 @@ final class CameraCaptureService: NSObject {
         AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) != nil
     }
 
+    static var isCameraAvailableForInterface: Bool {
+        isCameraAvailable || shouldSimulateDenied(arguments: CommandLine.arguments)
+    }
+
+    static func shouldSimulateDenied(arguments: [String]) -> Bool {
+        #if DEBUG
+        arguments.contains("-simulateCameraDenied")
+        #else
+        false
+        #endif
+    }
+
     let session = AVCaptureSession()
 
     private let photoOutput = AVCapturePhotoOutput()
@@ -63,6 +75,11 @@ final class CameraCaptureService: NSObject {
     }
 
     func prepare() {
+        if Self.shouldSimulateDenied(arguments: CommandLine.arguments) {
+            status = .denied
+            return
+        }
+
         guard AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) != nil else {
             status = .unavailable("Camera is not available on this device. Import a plant photo or use simulator capture.")
             return

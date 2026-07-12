@@ -1260,6 +1260,8 @@ private struct CameraGuideOverlay: View {
                 }
                 Spacer()
             }
+            .padding(.leading, FirstSeedVisualContract.cameraHeaderLeadingClearance)
+            .padding(.trailing, FirstSeedVisualContract.cameraHeaderTrailingClearance)
 
             Spacer()
 

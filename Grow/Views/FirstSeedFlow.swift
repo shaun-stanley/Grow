@@ -65,7 +65,7 @@ struct FirstSeedFlow: View {
                     isSaving: isSavingCapture,
                     errorMessage: coordinator.errorMessage,
                     hasGrow: activeGrow != nil,
-                    showSimulatorCapture: !CameraCaptureService.isCameraAvailable,
+                    showSimulatorCapture: !CameraCaptureService.isCameraAvailableForInterface,
                     onCamera: { isShowingCamera = true },
                     onPrototypeCapture: capturePrototype,
                     onRetry: {
