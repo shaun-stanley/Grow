@@ -61,7 +61,7 @@ Leaf count, stem geometry, root development, vessel marks, countertop grain, bac
 
 ## Master Asset Set
 
-The app ships twelve portrait master photographs under one versioned sample story. Suggested logical identifiers are:
+The app ships fourteen portrait master photographs under one versioned sample story. Days 1–7 each receive a distinct master because that danger-zone arc must never imply daily capture while silently reusing yesterday's image. The later month remains intentionally sparse. Suggested logical identifiers are:
 
 | Identifier | Story moment | Primary use |
 |---|---|---|
@@ -69,7 +69,9 @@ The app ships twelve portrait master photographs under one versioned sample stor
 | `ojai-basil-day-01` | First saved frame | Onboarding and Day 1 memory |
 | `ojai-basil-day-02` | Near-identical early frame | Early reward and continuity QA |
 | `ojai-basil-day-03` | Cotyledon cue | Day 3 streak milestone |
+| `ojai-basil-day-04` | Cotyledons expanding, true leaves peeking | Unique Day 4 memory |
 | `ojai-basil-day-05` | First true leaves | Future-reel strip |
+| `ojai-basil-day-06` | Established first true-leaf pair | Unique Day 6 memory |
 | `ojai-basil-day-07` | First-week frame | Day 7 recap and share artifact |
 | `ojai-basil-day-10` | Early branching | Intermediate demo capture |
 | `ojai-basil-day-14` | Denser canopy | Mid-grow poster |
@@ -324,7 +326,8 @@ At default text size, verify VoiceOver reading and focus order, visible sample l
 - Genuine media always takes precedence over sample media and receives no aesthetic filtering. Required orientation normalization, encoding, downsampling, and aspect-ratio cropping remain permitted.
 - A sample persisted through the ordinary App Group path retains its `.demoSample` origin and source ID across relaunch.
 - Genuine reel export never silently substitutes sample photography.
-- The twelve master photographs meet the approved Ojai art direction and survive all required crops.
+- The fourteen master photographs meet the approved Ojai art direction and survive all required crops.
+- Days 1–7 resolve to seven distinct sample IDs and never reuse a prior day's photograph.
 - Tests and the required Xcode build pass.
 - All named surfaces and one exported reel are visually approved in the iPhone 17 Pro simulator at standard/default content size.
 

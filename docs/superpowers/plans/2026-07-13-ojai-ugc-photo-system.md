@@ -34,9 +34,9 @@ xcodebuild -project Grow.xcodeproj -scheme Grow -configuration Debug -sdk iphone
 - Create `Grow/Models/GrowPhotoOrigin.swift` — stored origin enum, provenance enum, quality enum, and stable photo ordering.
 - Modify `Grow/Models/GrowModels.swift` — durable `originRaw` and `sourceSampleID` fields plus computed origin.
 - Create `Grow/Resources/DemoGrow/OjaiBasil/OjaiBasilManifest.json` — uniquely named versioned sample manifest with IDs, days, sequences, crop focal points, and String Catalog keys.
-- Create `Grow/Resources/DemoGrow/OjaiBasil/*.jpg` — twelve optimized portrait masters.
+- Create `Grow/Resources/DemoGrow/OjaiBasil/*.jpg` — fourteen optimized portrait masters.
 - Create `DesignSources/OjaiBasil/*.png` — non-target generation masters retained for derivatives.
-- Create `Grow/Localizable.xcstrings` — twelve sample accessibility descriptions and recovery labels.
+- Create `Grow/Localizable.xcstrings` — fourteen sample accessibility descriptions and recovery labels.
 - Create `Grow/Services/DemoGrowPhotoLibrary.swift` — manifest validation and deterministic selection.
 - Create `Grow/Services/GrowImageDecoder.swift` — Image I/O downsampling, orientation normalization, bounded caching, and cancellation.
 - Create `Grow/Services/GrowPhotoSourceResolver.swift` — policy-bound media resolution and typed failures.
@@ -443,7 +443,7 @@ git commit -m "Define Ojai demo photo manifest"
 git push origin main
 ```
 
-## Task 3: Generate, Curate, and Bundle the Twelve-Frame Ojai Story
+## Task 3: Generate, Curate, and Bundle the Fourteen-Frame Ojai Story
 
 **Files:**
 - Create: `DesignSources/OjaiBasil/*.png`
@@ -453,7 +453,7 @@ git push origin main
 - Modify: `GrowTests/DemoGrowPhotoLibraryTests.swift`
 
 **Interfaces:**
-- Produces: twelve files referenced by manifest IDs, `DemoGrowPhotoLibrary.bundled`, localization keys.
+- Produces: fourteen files referenced by manifest IDs, `DemoGrowPhotoLibrary.bundled`, localization keys.
 - Consumes: `DemoGrowPhotoManifest` and `DemoGrowPhotoFrame` from Task 2.
 
 - [ ] **Step 1: Generate the continuity anchor with the built-in image generation tool**
@@ -477,7 +477,7 @@ Avoid: empty net cup, loose seed in plastic basket, unexplained pale object, sub
 
 Inspect the generated image for the approved invariants. Copy the selected built-in output to `DesignSources/OjaiBasil/ojai-basil-setup.png`.
 
-- [ ] **Step 2: Derive the eleven later masters sequentially**
+- [ ] **Step 2: Derive the thirteen later masters sequentially**
 
 For each row, edit the immediately preceding approved source image with the built-in image generation tool. Repeat this invariant block in every prompt:
 
@@ -495,7 +495,9 @@ No empty basket, loose seed, face, text, logo, watermark, soil, extra jar, dupli
 | `ojai-basil-day-01.png` | Same coir plug and initial nutrient contact; one barely visible germination cue; a cream linen cuff and two fingertips gently steady the net cup; cool morning light. |
 | `ojai-basil-day-02.png` | Same coir plug and near-identical nutrient level; minuscule emerging pale-green hook; remove hand; shift exposure by less than one third stop. |
 | `ojai-basil-day-03.png` | Two small cotyledons open above the net cup; fine pale roots just visible through amber glass; nutrient line begins its gradual drop; soft overcast light. |
+| `ojai-basil-day-04.png` | Same seedling with slightly broader cotyledons and the first true leaves only peeking from the center; roots extend modestly; lower the nutrient line only enough to preserve immersed root tips; no lifestyle prop. |
 | `ojai-basil-day-05.png` | First true leaf pair appears; roots lengthen naturally; half-finished handmade coffee cup enters far-right background, softly out of focus. |
+| `ojai-basil-day-06.png` | First true-leaf pair is established while a second pair is only beginning; roots branch slightly and remain immersed; coffee cup is removed; waterline declines subtly. |
 | `ojai-basil-day-07.png` | Healthy first-week seedling with two cotyledons and two true-leaf pairs; slim vintage gold bracelet and linen sleeve near jar without touching plant; bright late-morning sun. |
 | `ojai-basil-day-10.png` | One additional leaf pair and early branching cue; hand absent; subtle sun stripe moves across counter. |
 | `ojai-basil-day-14.png` | Denser but still young basil canopy with plausible stem spacing and stronger root mass; small pruning scissors rest at far left. |
@@ -514,7 +516,7 @@ For each selected PNG, create a 2160×3840 portrait JPEG in `Grow/Resources/Demo
 sips -g pixelWidth -g pixelHeight -g format Grow/Resources/DemoGrow/OjaiBasil/*.jpg
 ```
 
-Expected: twelve JPEG files, each 2160×3840. Inspect every JPEG after conversion.
+Expected: fourteen JPEG files, each 2160×3840. Inspect every JPEG after conversion.
 
 - [ ] **Step 4: Add the exact production manifest**
 
@@ -530,14 +532,16 @@ Create `Grow/Resources/DemoGrow/OjaiBasil/OjaiBasilManifest.json` with this exac
     {"id":"ojai-basil-day-01","fileName":"ojai-basil-day-01.jpg","day":1,"sequence":1,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_01_accessibility"},
     {"id":"ojai-basil-day-02","fileName":"ojai-basil-day-02.jpg","day":2,"sequence":2,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_02_accessibility"},
     {"id":"ojai-basil-day-03","fileName":"ojai-basil-day-03.jpg","day":3,"sequence":3,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_03_accessibility"},
-    {"id":"ojai-basil-day-05","fileName":"ojai-basil-day-05.jpg","day":5,"sequence":4,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_05_accessibility"},
-    {"id":"ojai-basil-day-07","fileName":"ojai-basil-day-07.jpg","day":7,"sequence":5,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_07_accessibility"},
-    {"id":"ojai-basil-day-10","fileName":"ojai-basil-day-10.jpg","day":10,"sequence":6,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_10_accessibility"},
-    {"id":"ojai-basil-day-14","fileName":"ojai-basil-day-14.jpg","day":14,"sequence":7,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.54},"memorySquare":{"x":0.50,"y":0.50},"timelineStrip":{"x":0.50,"y":0.55},"posterThumbnail":{"x":0.50,"y":0.54}},"accessibilityKey":"demo_ojai_day_14_accessibility"},
-    {"id":"ojai-basil-day-21","fileName":"ojai-basil-day-21.jpg","day":21,"sequence":8,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.51},"memorySquare":{"x":0.50,"y":0.48},"timelineStrip":{"x":0.50,"y":0.53},"posterThumbnail":{"x":0.50,"y":0.51}},"accessibilityKey":"demo_ojai_day_21_accessibility"},
-    {"id":"ojai-basil-day-30","fileName":"ojai-basil-day-30.jpg","day":30,"sequence":9,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.49},"memorySquare":{"x":0.50,"y":0.47},"timelineStrip":{"x":0.50,"y":0.51},"posterThumbnail":{"x":0.50,"y":0.49}},"accessibilityKey":"demo_ojai_day_30_accessibility"},
-    {"id":"ojai-basil-harvest","fileName":"ojai-basil-harvest.jpg","day":30,"sequence":10,"moment":"harvest","focalPoints":{"reelPortrait":{"x":0.55,"y":0.48},"memorySquare":{"x":0.57,"y":0.47},"timelineStrip":{"x":0.58,"y":0.50},"posterThumbnail":{"x":0.55,"y":0.48}},"accessibilityKey":"demo_ojai_harvest_accessibility"},
-    {"id":"ojai-basil-finale","fileName":"ojai-basil-finale.jpg","day":30,"sequence":11,"moment":"finale","focalPoints":{"reelPortrait":{"x":0.50,"y":0.57},"memorySquare":{"x":0.50,"y":0.54},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.57}},"accessibilityKey":"demo_ojai_finale_accessibility"}
+    {"id":"ojai-basil-day-04","fileName":"ojai-basil-day-04.jpg","day":4,"sequence":4,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_04_accessibility"},
+    {"id":"ojai-basil-day-05","fileName":"ojai-basil-day-05.jpg","day":5,"sequence":5,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_05_accessibility"},
+    {"id":"ojai-basil-day-06","fileName":"ojai-basil-day-06.jpg","day":6,"sequence":6,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_06_accessibility"},
+    {"id":"ojai-basil-day-07","fileName":"ojai-basil-day-07.jpg","day":7,"sequence":7,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_07_accessibility"},
+    {"id":"ojai-basil-day-10","fileName":"ojai-basil-day-10.jpg","day":10,"sequence":8,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.56},"memorySquare":{"x":0.50,"y":0.52},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.56}},"accessibilityKey":"demo_ojai_day_10_accessibility"},
+    {"id":"ojai-basil-day-14","fileName":"ojai-basil-day-14.jpg","day":14,"sequence":9,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.54},"memorySquare":{"x":0.50,"y":0.50},"timelineStrip":{"x":0.50,"y":0.55},"posterThumbnail":{"x":0.50,"y":0.54}},"accessibilityKey":"demo_ojai_day_14_accessibility"},
+    {"id":"ojai-basil-day-21","fileName":"ojai-basil-day-21.jpg","day":21,"sequence":10,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.51},"memorySquare":{"x":0.50,"y":0.48},"timelineStrip":{"x":0.50,"y":0.53},"posterThumbnail":{"x":0.50,"y":0.51}},"accessibilityKey":"demo_ojai_day_21_accessibility"},
+    {"id":"ojai-basil-day-30","fileName":"ojai-basil-day-30.jpg","day":30,"sequence":11,"moment":"ordinary","focalPoints":{"reelPortrait":{"x":0.50,"y":0.49},"memorySquare":{"x":0.50,"y":0.47},"timelineStrip":{"x":0.50,"y":0.51},"posterThumbnail":{"x":0.50,"y":0.49}},"accessibilityKey":"demo_ojai_day_30_accessibility"},
+    {"id":"ojai-basil-harvest","fileName":"ojai-basil-harvest.jpg","day":30,"sequence":12,"moment":"harvest","focalPoints":{"reelPortrait":{"x":0.55,"y":0.48},"memorySquare":{"x":0.57,"y":0.47},"timelineStrip":{"x":0.58,"y":0.50},"posterThumbnail":{"x":0.55,"y":0.48}},"accessibilityKey":"demo_ojai_harvest_accessibility"},
+    {"id":"ojai-basil-finale","fileName":"ojai-basil-finale.jpg","day":30,"sequence":13,"moment":"finale","focalPoints":{"reelPortrait":{"x":0.50,"y":0.57},"memorySquare":{"x":0.50,"y":0.54},"timelineStrip":{"x":0.50,"y":0.58},"posterThumbnail":{"x":0.50,"y":0.57}},"accessibilityKey":"demo_ojai_finale_accessibility"}
   ]
 }
 ```
@@ -553,7 +557,9 @@ demo_ojai_setup_accessibility = "Setup sample photo of an amber hydroponic jar w
 demo_ojai_day_01_accessibility = "Day 1 sample photo of a newly planted basil seed in an amber hydroponic jar."
 demo_ojai_day_02_accessibility = "Day 2 sample photo of the first tiny basil sprout in an amber hydroponic jar."
 demo_ojai_day_03_accessibility = "Day 3 sample photo of basil cotyledons opening above an amber hydroponic jar."
+demo_ojai_day_04_accessibility = "Day 4 sample photo of expanding basil cotyledons and the first true leaves beginning to emerge."
 demo_ojai_day_05_accessibility = "Day 5 sample photo of basil's first true leaves on a sunlit oak counter."
+demo_ojai_day_06_accessibility = "Day 6 sample photo of an established first true-leaf pair in an amber hydroponic jar."
 demo_ojai_day_07_accessibility = "Day 7 sample photo of young basil in an amber hydroponic jar on a sunlit oak counter."
 demo_ojai_day_10_accessibility = "Day 10 sample photo of a branching young basil plant in an amber hydroponic jar."
 demo_ojai_day_14_accessibility = "Day 14 sample photo of a denser basil canopy and visible hydroponic roots."
@@ -594,11 +600,11 @@ static func bundled(bundle: Bundle = .main) throws -> DemoGrowPhotoLibrary {
 }
 ```
 
-Add `testBundledStoryLoadsAllTwelveFramesInSequence()` using `DemoGrowPhotoLibrary.bundled(bundle: .main)` and assert the IDs exactly match the manifest order from setup through finale.
+Add `testBundledStoryLoadsAllFourteenFramesInSequence()` using `DemoGrowPhotoLibrary.bundled(bundle: .main)` and assert the IDs exactly match the manifest order from setup through finale. Add an assertion that days 1 through 7 resolve to seven distinct IDs.
 
 - [ ] **Step 7: Visually review the contact sheet and crop matrix**
 
-Create a non-shipping contact sheet in `/tmp` showing all twelve frames and a crop matrix for 9:16, 1:1, strip, and poster intents. Inspect continuity, human anatomy, growth direction, water/root plausibility, overlay safe area, and absence of embedded text.
+Create a non-shipping contact sheet in `/tmp` showing all fourteen frames and a crop matrix for 9:16, 1:1, strip, and poster intents. Inspect continuity, human anatomy, growth direction, water/root plausibility, overlay safe area, and absence of embedded text.
 
 - [ ] **Step 8: Run tests/build, commit, and push**
 
@@ -995,7 +1001,7 @@ Reset debug seed data, use simulator capture seven times, and verify source IDs,
 
 - [ ] **Step 5: Render and inspect the sample reel**
 
-Render the twelve-frame start-to-harvest story. Inspect the 9:16 movie frame by frame for jar/background continuity, plausible plant growth, stable crop, exposure flicker, overlay contrast, temporal order, and absence of synthetic drawings. Verify poster and export thumbnail use the same photo story.
+Render the fourteen-frame start-to-harvest story. Inspect the 9:16 movie frame by frame for jar/background continuity, plausible plant growth, stable crop, exposure flicker, overlay contrast, temporal order, and absence of synthetic drawings. Verify poster and export thumbnail use the same photo story.
 
 - [ ] **Step 6: Run default-size accessibility and appearance QA**
 
@@ -1003,7 +1009,7 @@ At standard/default text size, verify light/dark, VoiceOver order and provenance
 
 - [ ] **Step 7: Inspect runtime logs and resource footprint**
 
-Search for decode failures, missing sample IDs, policy violations, App Group failures, memory warnings, and reel errors. Confirm twelve masters are bundled exactly once and record their installed size.
+Search for decode failures, missing sample IDs, policy violations, App Group failures, memory warnings, and reel errors. Confirm fourteen masters are bundled exactly once and record their installed size.
 
 - [ ] **Step 8: Run final repository hygiene checks**
 
