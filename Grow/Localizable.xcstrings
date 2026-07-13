@@ -1,0 +1,176 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "demo_ojai_day_01_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 1 sample photo of a newly planted basil seed in an amber hydroponic jar."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_02_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 2 sample photo of the first tiny basil sprout in an amber hydroponic jar."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_03_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 3 sample photo of basil cotyledons opening above an amber hydroponic jar."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_04_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 4 sample photo of expanding basil cotyledons and the first true leaves beginning to emerge."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_05_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 5 sample photo of basil's first true leaves on a sunlit oak counter."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_06_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 6 sample photo of an established first true-leaf pair in an amber hydroponic jar."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_07_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 7 sample photo of young basil in an amber hydroponic jar on a sunlit oak counter."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_10_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 10 sample photo of a branching young basil plant in an amber hydroponic jar."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_14_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 14 sample photo of a denser basil canopy and visible hydroponic roots."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_21_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 21 sample photo of structured mature basil in an amber hydroponic jar."
+          }
+        }
+      }
+    },
+    "demo_ojai_day_30_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day 30 sample photo of full harvest-ready basil in warm afternoon light."
+          }
+        }
+      }
+    },
+    "demo_ojai_finale_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Final sample photo of harvested basil beside the pruned plant and amber jar."
+          }
+        }
+      }
+    },
+    "demo_ojai_harvest_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Harvest sample photo of linen-sleeved hands pruning mature basil above a node."
+          }
+        }
+      }
+    },
+    "demo_ojai_setup_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setup sample photo of an amber hydroponic jar with a basil seed in a coir starter plug on a pale oak counter."
+          }
+        }
+      }
+    },
+    "missing_reel_frame_error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A photo in this reel is unavailable. Restore it before exporting."
+          }
+        }
+      }
+    },
+    "sample_frame_badge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sample frame"
+          }
+        }
+      }
+    },
+    "sample_frame_recovery_accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sample recovery frame; the original photo is unavailable."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

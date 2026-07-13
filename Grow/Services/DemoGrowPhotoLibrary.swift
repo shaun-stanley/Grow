@@ -32,6 +32,75 @@ struct DemoGrowPhotoFrame: Codable, Equatable, Sendable {
     let moment: DemoGrowStoryMoment
     let focalPoints: [DemoGrowCropIntent: NormalizedPoint]
     let accessibilityKey: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case fileName
+        case day
+        case sequence
+        case moment
+        case focalPoints
+        case accessibilityKey
+    }
+
+    init(
+        id: String,
+        fileName: String,
+        day: Int,
+        sequence: Int,
+        moment: DemoGrowStoryMoment,
+        focalPoints: [DemoGrowCropIntent: NormalizedPoint],
+        accessibilityKey: String
+    ) {
+        self.id = id
+        self.fileName = fileName
+        self.day = day
+        self.sequence = sequence
+        self.moment = moment
+        self.focalPoints = focalPoints
+        self.accessibilityKey = accessibilityKey
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        fileName = try container.decode(String.self, forKey: .fileName)
+        day = try container.decode(Int.self, forKey: .day)
+        sequence = try container.decode(Int.self, forKey: .sequence)
+        moment = try container.decode(DemoGrowStoryMoment.self, forKey: .moment)
+        accessibilityKey = try container.decode(String.self, forKey: .accessibilityKey)
+
+        let keyedPoints = try container.decode(
+            [String: NormalizedPoint].self,
+            forKey: .focalPoints
+        )
+        var decodedPoints: [DemoGrowCropIntent: NormalizedPoint] = [:]
+        for (key, point) in keyedPoints {
+            guard let intent = DemoGrowCropIntent(rawValue: key) else {
+                throw DecodingError.dataCorruptedError(
+                    forKey: .focalPoints,
+                    in: container,
+                    debugDescription: "Unknown crop intent: \(key)"
+                )
+            }
+            decodedPoints[intent] = point
+        }
+        focalPoints = decodedPoints
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(fileName, forKey: .fileName)
+        try container.encode(day, forKey: .day)
+        try container.encode(sequence, forKey: .sequence)
+        try container.encode(moment, forKey: .moment)
+        try container.encode(accessibilityKey, forKey: .accessibilityKey)
+        try container.encode(
+            Dictionary(uniqueKeysWithValues: focalPoints.map { ($0.key.rawValue, $0.value) }),
+            forKey: .focalPoints
+        )
+    }
 }
 
 struct DemoGrowPhotoManifest: Codable, Equatable, Sendable {
@@ -60,6 +129,29 @@ struct DemoGrowPhotoAsset: Sendable {
 struct DemoGrowPhotoLibrary: Sendable {
     private let manifest: DemoGrowPhotoManifest
     private let assets: [String: Data]
+
+    static func bundled(bundle: Bundle = .main) throws -> DemoGrowPhotoLibrary {
+        guard let manifestURL = bundle.url(
+            forResource: "OjaiBasilManifest",
+            withExtension: "json",
+            subdirectory: nil
+        ) else {
+            throw DemoGrowPhotoLibraryError.malformedManifest
+        }
+
+        let manifestData = try Data(contentsOf: manifestURL)
+        return try DemoGrowPhotoLibrary(manifestData: manifestData) { fileName in
+            let resourceName = fileName.replacingOccurrences(of: ".jpg", with: "")
+            guard let url = bundle.url(
+                forResource: resourceName,
+                withExtension: "jpg",
+                subdirectory: nil
+            ) else {
+                return nil
+            }
+            return try? Data(contentsOf: url)
+        }
+    }
 
     init(manifestData: Data, assetData: (String) -> Data?) throws {
         guard let decoded = try? JSONDecoder().decode(DemoGrowPhotoManifest.self, from: manifestData),

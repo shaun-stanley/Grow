@@ -3,6 +3,43 @@ import XCTest
 @testable import Grow
 
 final class DemoGrowPhotoLibraryTests: XCTestCase {
+    func testBundledStoryLoadsAllFourteenFramesInSequence() throws {
+        let manifestURL = try XCTUnwrap(
+            Bundle.main.url(
+                forResource: "OjaiBasilManifest",
+                withExtension: "json",
+                subdirectory: nil
+            )
+        )
+        let manifestData = try Data(contentsOf: manifestURL)
+        _ = try JSONDecoder().decode(DemoGrowPhotoManifest.self, from: manifestData)
+
+        let library = try DemoGrowPhotoLibrary.bundled(bundle: .main)
+        let expectedIDs = [
+            "ojai-basil-setup",
+            "ojai-basil-day-01",
+            "ojai-basil-day-02",
+            "ojai-basil-day-03",
+            "ojai-basil-day-04",
+            "ojai-basil-day-05",
+            "ojai-basil-day-06",
+            "ojai-basil-day-07",
+            "ojai-basil-day-10",
+            "ojai-basil-day-14",
+            "ojai-basil-day-21",
+            "ojai-basil-day-30",
+            "ojai-basil-harvest",
+            "ojai-basil-finale"
+        ]
+
+        XCTAssertEqual(try library.reelFrames().map(\.id), expectedIDs)
+
+        let firstWeekIDs = try (1...7).map { day in
+            try library.frame(forDay: day).id
+        }
+        XCTAssertEqual(Set(firstWeekIDs).count, 7)
+    }
+
     func testSparseDayChoosesNearestPriorFrame() throws {
         let library = try DemoGrowPhotoLibrary(
             manifestData: manifestData(frames: [
