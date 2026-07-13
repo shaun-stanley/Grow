@@ -67,7 +67,7 @@ struct FirstSeedFlow: View {
                     hasGrow: activeGrow != nil,
                     showSimulatorCapture: !CameraCaptureService.isCameraAvailableForInterface,
                     onCamera: { isShowingCamera = true },
-                    onPrototypeCapture: capturePrototype,
+                    onDemoCapture: captureDemo,
                     onRetry: {
                         coordinator.retryCapture()
                         if CameraCaptureService.isCameraAvailable {
@@ -98,7 +98,7 @@ struct FirstSeedFlow: View {
                     configuration: .dayOne(speciesName: speciesName),
                     onCapture: { data in
                         isShowingCamera = false
-                        recordImageData(data, for: grow)
+                        recordImageData(data, origin: .camera, for: grow)
                     },
                     onCancel: { isShowingCamera = false },
                     onFailure: { message in
@@ -178,16 +178,21 @@ struct FirstSeedFlow: View {
             guard let data = try await item.loadTransferable(type: Data.self) else {
                 throw PhotoServiceError.unreadableImage
             }
-            recordImageData(data, for: grow)
+            recordImageData(data, origin: .photoLibrary, for: grow)
         } catch {
             coordinator.captureFailed(message: captureFailureCopy(error.localizedDescription))
         }
     }
 
-    private func recordImageData(_ data: Data, for grow: Grow) {
+    private func recordImageData(
+        _ data: Data,
+        origin: GrowPhotoOrigin,
+        for grow: Grow
+    ) {
         do {
             let reward = try photoService.recordCapture(
                 imageData: data,
+                origin: origin,
                 for: grow,
                 species: catalog.species(id: grow.speciesID)
             )
@@ -197,16 +202,24 @@ struct FirstSeedFlow: View {
         }
     }
 
-    private func capturePrototype() {
+    private func captureDemo() {
         guard let grow = activeGrow else {
             coordinator.captureFailed(message: "Your grow is still being prepared. Return to setup and try again.")
             return
         }
-        let reward = photoService.recordPrototypeCapture(
-            for: grow,
-            species: catalog.species(id: grow.speciesID)
-        )
-        finishCapture(reward, grow: grow)
+        isSavingCapture = true
+        Task { @MainActor in
+            defer { isSavingCapture = false }
+            do {
+                let reward = try await photoService.recordDemoCapture(
+                    for: grow,
+                    species: catalog.species(id: grow.speciesID)
+                )
+                finishCapture(reward, grow: grow)
+            } catch {
+                coordinator.captureFailed(message: captureFailureCopy(error.localizedDescription))
+            }
+        }
     }
 
     private func finishCapture(_ reward: CaptureReward, grow: Grow) {
@@ -249,7 +262,7 @@ private struct FirstSeedCaptureBeat: View {
     let hasGrow: Bool
     let showSimulatorCapture: Bool
     var onCamera: () -> Void
-    var onPrototypeCapture: () -> Void
+    var onDemoCapture: () -> Void
     var onRetry: () -> Void
     var onBack: () -> Void
 
@@ -302,7 +315,7 @@ private struct FirstSeedCaptureBeat: View {
                         FirstSeedPrimaryButton(
                             title: isSaving ? "Saving frame…" : "Save simulator frame",
                             systemImage: "camera.aperture",
-                            action: onPrototypeCapture
+                            action: onDemoCapture
                         )
                         .disabled(isSaving || !hasGrow)
                         .accessibilityLabel("Use simulator capture")

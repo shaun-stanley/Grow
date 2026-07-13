@@ -17,7 +17,11 @@ struct GrowApp: App {
         let catalog = PlantCatalogService()
         let store = GrowStore(context: modelContainer.mainContext, catalog: catalog)
         let streakService = StreakService(context: modelContainer.mainContext)
-        let photoService = PhotoService(context: modelContainer.mainContext, streakService: streakService)
+        let photoService = PhotoService(
+            context: modelContainer.mainContext,
+            streakService: streakService,
+            demoLibrary: try? .bundled()
+        )
         let notificationService = NotificationService()
         let widgetSyncService = WidgetSyncService()
         let reelRenderingService = ReelRenderingService(context: modelContainer.mainContext)
@@ -67,17 +71,23 @@ struct GrowApp: App {
            (grow.photos ?? []).isEmpty {
             let species = catalog.species(id: grow.speciesID)
             let startDate = Calendar.current.startOfDay(for: grow.startDate)
-            for offset in 0..<8 {
-                let captureDate = Calendar.current.date(
-                    byAdding: .day,
-                    value: offset,
-                    to: startDate
-                )?.addingTimeInterval(9 * 60 * 60) ?? Date()
-                _ = photoService.recordPrototypeCapture(
-                    for: grow,
-                    species: species,
-                    capturedAt: captureDate
-                )
+            Task { @MainActor in
+                for offset in 0..<8 {
+                    let captureDate = Calendar.current.date(
+                        byAdding: .day,
+                        value: offset,
+                        to: startDate
+                    )?.addingTimeInterval(9 * 60 * 60) ?? Date()
+                    _ = try? await photoService.recordDemoCapture(
+                        for: grow,
+                        species: species,
+                        capturedAt: captureDate
+                    )
+                }
+                if launchArguments.contains("-renderSampleReel"),
+                   (grow.reels ?? []).isEmpty {
+                    await reelRenderingService.renderPreview(for: grow, species: species)
+                }
             }
         }
 
@@ -135,10 +145,16 @@ struct GrowApp: App {
         grow.currentStage = .germination
 
         let species = catalog.species(id: grow.speciesID)
-        for dayOffset in 0..<max(0, clampedDay - 1) {
-            let captureDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: grow.startDate)?
-                .addingTimeInterval(9 * 60 * 60) ?? Date()
-            _ = photoService.recordPrototypeCapture(for: grow, species: species, capturedAt: captureDate)
+        Task { @MainActor in
+            for dayOffset in 0..<max(0, clampedDay - 1) {
+                let captureDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: grow.startDate)?
+                    .addingTimeInterval(9 * 60 * 60) ?? Date()
+                _ = try? await photoService.recordDemoCapture(
+                    for: grow,
+                    species: species,
+                    capturedAt: captureDate
+                )
+            }
         }
         try? store.save()
         #endif
@@ -172,11 +188,15 @@ struct GrowApp: App {
 
         coordinator.didCreateGrow(id: grow.id)
         guard rawStep == "reward" else { return }
-        let reward = photoService.recordPrototypeCapture(
-            for: grow,
-            species: catalog.species(id: grow.speciesID)
-        )
-        coordinator.didCapture(reward)
+        Task { @MainActor in
+            guard let reward = try? await photoService.recordDemoCapture(
+                for: grow,
+                species: catalog.species(id: grow.speciesID)
+            ) else {
+                return
+            }
+            coordinator.didCapture(reward)
+        }
     }
     #endif
 }

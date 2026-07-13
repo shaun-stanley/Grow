@@ -735,19 +735,19 @@ git push origin main
 - Produces: `PhotoService.recordCapture(imageData:origin:for:species:)`, `PhotoService.recordDemoCapture(for:species:capturedAt:) async throws`, `StreakService.stageCapture(at:) -> StreakTransaction`.
 - Consumes: `DemoGrowPhotoLibrary.asset(forDay:)`, `GrowPhotoOrigin`, and App Group photo paths.
 
-- [ ] **Step 1: Write failing origin and demo persistence tests**
+- [x] **Step 1: Write failing origin and demo persistence tests**
 
 Add tests asserting camera writes `.camera`, Photos Picker writes `.photoLibrary`, demo writes `.demoSample` plus the selected ID, and a reconstructed container retains demo provenance.
 
-- [ ] **Step 2: Extend transaction-failure tests**
+- [x] **Step 2: Extend transaction-failure tests**
 
 Add injected failures for thumbnail creation and `saveContext`. Assert no file, no photo model, unchanged cover/stage, and unchanged streak. Add a success test asserting photo, grow, and streak are saved in one context commit.
 
-- [ ] **Step 3: Run focused tests and verify RED**
+- [x] **Step 3: Run focused tests and verify RED**
 
 Expected: origin parameter, demo method, and streak transaction contracts are missing.
 
-- [ ] **Step 4: Add transaction-compatible streak mutation**
+- [x] **Step 4: Add transaction-compatible streak mutation**
 
 Create a value snapshot:
 
@@ -771,7 +771,7 @@ struct StreakTransaction {
 
 `stageCapture(at:)` applies the existing calendar logic without saving. Keep `recordCapture(at:)` as the public convenience that stages and then saves for non-photo callers.
 
-- [ ] **Step 5: Consolidate capture into one throwing transaction**
+- [x] **Step 5: Consolidate capture into one throwing transaction**
 
 Change genuine capture signature to require exact origin:
 
@@ -786,7 +786,7 @@ func recordCapture(
 
 Reject `.demoSample` from this method. Create a private `persistCapture(imageData:origin:sourceSampleID:capturedAt:grow:species:alignment:) throws` used by genuine and demo paths. Generate thumbnail before model insertion, atomically write the JPEG, stage model/grow/streak, save once, and roll back file/model/grow/streak on failure.
 
-- [ ] **Step 6: Replace prototype drawing with deterministic demo capture**
+- [x] **Step 6: Replace prototype drawing with deterministic demo capture**
 
 Implement:
 
@@ -812,14 +812,14 @@ func recordDemoCapture(
 
 Delete `prototypeImage`, `drawPrototypePlant`, `drawPrototypeLeaf`, and `drawPrototypePebbles`.
 
-- [ ] **Step 7: Update callers with exact origins and throwing UI state**
+- [x] **Step 7: Update callers with exact origins and throwing UI state**
 
 - Camera callbacks pass `.camera`.
 - Photos Picker imports pass `.photoLibrary`.
 - Simulator buttons call `recordDemoCapture` in a `Task`, disable while awaiting, and show the existing capture error alert on failure.
 - Onboarding simulator capture follows the same path.
 
-- [ ] **Step 8: Run focused/full tests, exact build, commit, and push**
+- [x] **Step 8: Run focused/full tests, exact build, commit, and push**
 
 ```bash
 git add Grow/Services/PhotoService.swift Grow/Services/StreakService.swift Grow/Views/CaptureScreen.swift Grow/Views/FirstSeedFlow.swift GrowTests/PhotoServiceTransactionTests.swift GrowTests/PhotoServiceOriginTests.swift

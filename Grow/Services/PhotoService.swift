@@ -104,58 +104,142 @@ struct CaptureReward: Identifiable, Equatable {
     }
 }
 
-@Observable
-final class PhotoService {
+nonisolated class PhotoThumbnailEncoder {
+    @MainActor
+    func data(from image: UIImage) throws -> Data {
+        let maxSide: CGFloat = 420
+        let longestSide = max(image.size.width, image.size.height)
+        let scale = min(1, maxSide / max(1, longestSide))
+        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let thumbnail = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+        guard let data = thumbnail.jpegData(compressionQuality: 0.76) else {
+            throw PhotoServiceError.unableToCreateThumbnail
+        }
+        return data
+    }
+}
+
+nonisolated class PhotoContextSaver {
+    @MainActor
+    func save(_ context: ModelContext) throws {
+        try context.save()
+    }
+}
+
+nonisolated final class PhotoService: Observable {
     private let context: ModelContext
     private let streakService: StreakService
-    private let saveContext: (ModelContext) throws -> Void
+    private let demoLibrary: DemoGrowPhotoLibrary?
+    private let contextSaver: PhotoContextSaver
+    private let thumbnailEncoder: PhotoThumbnailEncoder
     private let encoder = JSONEncoder()
     private let calendar: Calendar
 
+    @MainActor
     init(
         context: ModelContext,
         streakService: StreakService,
         calendar: Calendar = .current,
-        saveContext: @escaping (ModelContext) throws -> Void = { try $0.save() }
+        demoLibrary: DemoGrowPhotoLibrary? = nil,
+        thumbnailEncoder: PhotoThumbnailEncoder? = nil,
+        contextSaver: PhotoContextSaver? = nil
     ) {
         self.context = context
         self.streakService = streakService
         self.calendar = calendar
-        self.saveContext = saveContext
+        self.demoLibrary = demoLibrary
+        self.thumbnailEncoder = thumbnailEncoder ?? PhotoThumbnailEncoder()
+        self.contextSaver = contextSaver ?? PhotoContextSaver()
     }
 
     @discardableResult
-    func recordCapture(imageData: Data, for grow: Grow, species: PlantSpecies?) throws -> CaptureReward {
-        let image = try normalizedImage(from: imageData)
-        let fullSizeData = try encodedPhotoData(from: image)
+    @MainActor
+    func recordCapture(
+        imageData: Data,
+        origin: GrowPhotoOrigin,
+        for grow: Grow,
+        species: PlantSpecies?
+    ) throws -> CaptureReward {
+        guard origin != .demoSample else {
+            throw PhotoServiceError.invalidCaptureOrigin
+        }
+        return try persistCapture(
+            imageData: imageData,
+            origin: origin,
+            sourceSampleID: nil,
+            capturedAt: .now,
+            grow: grow,
+            species: species,
+            alignment: nil
+        )
+    }
+
+    @discardableResult
+    @MainActor
+    func recordDemoCapture(
+        for grow: Grow,
+        species: PlantSpecies?,
+        capturedAt: Date = .now
+    ) async throws -> CaptureReward {
+        guard let demoLibrary else {
+            throw PhotoServiceError.demoLibraryUnavailable
+        }
         let existingPhotos = sortedPhotos(for: grow)
         let frameCount = existingPhotos.count + 1
-        let capturedAt = Date()
+        let dayIndex = max(growDayIndex(for: grow, at: capturedAt), frameCount)
+        let asset = try demoLibrary.asset(forDay: dayIndex)
+        return try persistCapture(
+            imageData: asset.data,
+            origin: .demoSample,
+            sourceSampleID: asset.frame.id,
+            capturedAt: capturedAt,
+            grow: grow,
+            species: species,
+            alignment: prototypeAlignment(frameCount: frameCount)
+        )
+    }
+
+    @MainActor
+    private func persistCapture(
+        imageData: Data,
+        origin: GrowPhotoOrigin,
+        sourceSampleID: String?,
+        capturedAt: Date,
+        grow: Grow,
+        species: PlantSpecies?,
+        alignment suppliedAlignment: CaptureAlignment?
+    ) throws -> CaptureReward {
+        let image = try normalizedImage(from: imageData)
+        let fullSizeData = origin == .demoSample
+            ? imageData
+            : try encodedPhotoData(from: image)
+        let thumbnailData = try thumbnailEncoder.data(from: image)
+        let existingPhotos = sortedPhotos(for: grow)
+        let frameCount = existingPhotos.count + 1
         let dayIndex = max(growDayIndex(for: grow, at: capturedAt), frameCount)
         let progressBefore = ModeledGrowthCurve.progress(dayIndex: max(1, dayIndex - 1), species: species)
         let progressAfter = ModeledGrowthCurve.progress(dayIndex: dayIndex, species: species)
         let stage = ModeledGrowthCurve.stage(for: progressAfter)
-        let alignment = alignmentForCapture(image, previousPhoto: existingPhotos.last, fallbackFrameCount: frameCount)
+        let alignment = suppliedAlignment ?? alignmentForCapture(
+            image,
+            previousPhoto: existingPhotos.last,
+            fallbackFrameCount: frameCount
+        )
+        let alignmentData = try encoder.encode(alignment)
 
         let photo = GrowPhoto(capturedAt: capturedAt, dayIndex: dayIndex, stage: stage)
         let localFileName = "Photos/\(grow.id.uuidString)/\(photo.id.uuidString).jpg"
         try writePhoto(fullSizeData, localFileName: localFileName)
         photo.localFileName = localFileName
-        photo.thumbnailData = thumbnailData(from: image)
-        photo.alignmentData = try? encoder.encode(alignment)
+        photo.thumbnailData = thumbnailData
+        photo.alignmentData = alignmentData
         photo.caption = CaptureRewardPolicy.caption(dayIndex: dayIndex, alignment: alignment)
-        photo.isMilestone = CaptureReward(
-            photoID: photo.id,
-            capturedAt: capturedAt,
-            dayIndex: dayIndex,
-            frameCount: frameCount,
-            targetFrameCount: 30,
-            alignment: alignment,
-            modeledProgressBefore: progressBefore,
-            modeledProgressAfter: progressAfter,
-            expectedStage: stage,
-            streak: streakService.snapshot()
-        ).milestoneTitle != nil
+        photo.isMilestone = CaptureRewardPolicy.milestoneTitle(dayIndex: dayIndex) != nil
+        photo.origin = origin
+        photo.sourceSampleID = sourceSampleID
         photo.grow = grow
         context.insert(photo)
 
@@ -165,10 +249,12 @@ final class PhotoService {
             grow.coverPhotoID = photo.id
         }
         grow.currentStage = stage
+        let streakTransaction = streakService.stageCapture(at: capturedAt)
 
         do {
             try save()
         } catch {
+            streakTransaction.rollback()
             rollbackCapture(
                 photo,
                 localFileName: localFileName,
@@ -179,8 +265,6 @@ final class PhotoService {
             throw error
         }
 
-        let streak = streakService.recordCapture(at: capturedAt)
-
         return CaptureReward(
             photoID: photo.id,
             capturedAt: capturedAt,
@@ -191,82 +275,20 @@ final class PhotoService {
             modeledProgressBefore: progressBefore,
             modeledProgressAfter: progressAfter,
             expectedStage: stage,
-            streak: streak
+            streak: streakTransaction.update
         )
     }
 
-    /// Prototype capture used until the AVFoundation camera lands. It records durable
-    /// photo metadata, alignment JSON, streak progress, and the exact reward payload the
-    /// real camera flow will emit.
-    @discardableResult
-    func recordPrototypeCapture(for grow: Grow, species: PlantSpecies?, capturedAt: Date = Date()) -> CaptureReward {
-        let existingPhotos = sortedPhotos(for: grow)
-        let frameCount = existingPhotos.count + 1
-        let dayIndex = max(growDayIndex(for: grow, at: capturedAt), frameCount)
-        let progressBefore = ModeledGrowthCurve.progress(dayIndex: max(1, dayIndex - 1), species: species)
-        let progressAfter = ModeledGrowthCurve.progress(dayIndex: dayIndex, species: species)
-        let stage = ModeledGrowthCurve.stage(for: progressAfter)
-        let alignment = prototypeAlignment(frameCount: frameCount)
-
-        let photo = GrowPhoto(capturedAt: capturedAt, dayIndex: dayIndex, stage: stage)
-        let prototypeFrame = prototypeImage(
-            frameCount: frameCount,
-            progress: progressAfter
-        )
-        let localFileName = "Photos/\(grow.id.uuidString)/\(photo.id.uuidString).jpg"
-        do {
-            let frameData = try encodedPhotoData(from: prototypeFrame)
-            try writePhoto(frameData, localFileName: localFileName)
-            photo.localFileName = localFileName
-            photo.thumbnailData = thumbnailData(from: prototypeFrame)
-        } catch {
-            #if DEBUG
-            print("Grow: prototype frame write failed: \(error)")
-            #endif
-        }
-        photo.alignmentData = try? encoder.encode(alignment)
-        photo.caption = CaptureRewardPolicy.caption(dayIndex: dayIndex, alignment: alignment)
-        photo.isMilestone = CaptureReward(
-            photoID: photo.id,
-            capturedAt: capturedAt,
-            dayIndex: dayIndex,
-            frameCount: frameCount,
-            targetFrameCount: 30,
-            alignment: alignment,
-            modeledProgressBefore: progressBefore,
-            modeledProgressAfter: progressAfter,
-            expectedStage: stage,
-            streak: streakService.snapshot()
-        ).milestoneTitle != nil
-        photo.grow = grow
-        context.insert(photo)
-
-        if grow.coverPhotoID == nil {
-            grow.coverPhotoID = photo.id
-        }
-        grow.currentStage = stage
-
-        let streak = streakService.recordCapture(at: capturedAt)
-        try? save()
-
-        return CaptureReward(
-            photoID: photo.id,
-            capturedAt: capturedAt,
-            dayIndex: dayIndex,
-            frameCount: frameCount,
-            targetFrameCount: 30,
-            alignment: alignment,
-            modeledProgressBefore: progressBefore,
-            modeledProgressAfter: progressAfter,
-            expectedStage: stage,
-            streak: streak
-        )
-    }
-
+    @MainActor
     private func sortedPhotos(for grow: Grow) -> [GrowPhoto] {
-        (grow.photos ?? []).sorted { $0.capturedAt < $1.capturedAt }
+        (grow.photos ?? []).sorted { lhs, rhs in
+            if lhs.dayIndex != rhs.dayIndex { return lhs.dayIndex < rhs.dayIndex }
+            if lhs.capturedAt != rhs.capturedAt { return lhs.capturedAt < rhs.capturedAt }
+            return lhs.id.uuidString < rhs.id.uuidString
+        }
     }
 
+    @MainActor
     private func growDayIndex(for grow: Grow, at date: Date) -> Int {
         let start = calendar.startOfDay(for: grow.startDate)
         let capture = calendar.startOfDay(for: date)
@@ -274,10 +296,12 @@ final class PhotoService {
         return max(1, days + 1)
     }
 
+    @MainActor
     private func prototypeAlignment(frameCount: Int) -> CaptureAlignment {
         estimatedAlignment(frameCount: frameCount, source: .prototype)
     }
 
+    @MainActor
     private func estimatedAlignment(frameCount: Int, source: AlignmentSource) -> CaptureAlignment {
         let cycle = Double((frameCount * 7) % 12)
         let score = min(0.99, 0.88 + cycle / 100)
@@ -290,127 +314,7 @@ final class PhotoService {
         )
     }
 
-    private func prototypeImage(frameCount: Int, progress: Double) -> UIImage {
-        let size = CGSize(width: 1080, height: 1920)
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        format.opaque = true
-
-        return UIGraphicsImageRenderer(size: size, format: format).image { renderer in
-            let context = renderer.cgContext
-            let bounds = CGRect(origin: .zero, size: size)
-            UIColor(hex: 0xF6EEDC).setFill()
-            context.fill(bounds)
-
-            context.saveGState()
-            context.setStrokeColor(UIColor(hex: 0xDDD3C0).withAlphaComponent(0.42).cgColor)
-            context.setLineWidth(2)
-            for x in stride(from: CGFloat(88), through: size.width - 88, by: 118) {
-                context.move(to: CGPoint(x: x, y: 0))
-                context.addLine(to: CGPoint(x: x + 52, y: size.height))
-                context.strokePath()
-            }
-            context.restoreGState()
-
-            let glowCenter = CGPoint(x: size.width * 0.5, y: size.height * 0.28)
-            let glowRect = CGRect(x: glowCenter.x - 470, y: glowCenter.y - 470, width: 940, height: 940)
-            UIColor(hex: 0xFFCB73).withAlphaComponent(0.28).setFill()
-            context.fillEllipse(in: glowRect)
-
-            let jarRect = CGRect(x: 210, y: 610, width: 660, height: 890)
-            let jarPath = UIBezierPath(roundedRect: jarRect, cornerRadius: 140)
-            UIColor.white.withAlphaComponent(0.38).setFill()
-            jarPath.fill()
-            UIColor(hex: 0xC9D8C0).withAlphaComponent(0.82).setStroke()
-            jarPath.lineWidth = 6
-            jarPath.stroke()
-
-            let waterRect = CGRect(x: jarRect.minX + 32, y: jarRect.maxY - 280, width: jarRect.width - 64, height: 222)
-            let waterPath = UIBezierPath(roundedRect: waterRect, cornerRadius: 92)
-            UIColor(hex: 0x4E9DB0).withAlphaComponent(0.23).setFill()
-            waterPath.fill()
-
-            drawPrototypePebbles(in: context, jarRect: jarRect, frameCount: frameCount)
-            drawPrototypePlant(in: context, jarRect: jarRect, progress: progress, frameCount: frameCount)
-        }
-    }
-
-    private func drawPrototypePlant(in context: CGContext, jarRect: CGRect, progress: Double, frameCount: Int) {
-        let p = CGFloat(min(1, max(0.06, progress)))
-        let base = CGPoint(x: jarRect.midX, y: jarRect.maxY - 175)
-        let tip = CGPoint(x: jarRect.midX + CGFloat((frameCount % 5) - 2) * 8, y: jarRect.maxY - 230 - jarRect.height * 0.58 * p)
-        let stem = UIBezierPath()
-        stem.move(to: base)
-        stem.addCurve(
-            to: tip,
-            controlPoint1: CGPoint(x: base.x - 74, y: base.y - 260 * p),
-            controlPoint2: CGPoint(x: tip.x + 70, y: tip.y + 190 * p)
-        )
-        UIColor(hex: 0x2C7C3C).setStroke()
-        stem.lineWidth = 12 + p * 10
-        stem.lineCapStyle = .round
-        stem.stroke()
-
-        let pairCount = max(1, Int((p * 5).rounded()))
-        for index in 0..<pairCount {
-            let t = CGFloat(index + 1) / CGFloat(pairCount + 1)
-            let y = base.y + (tip.y - base.y) * t
-            let x = base.x + sin(t * .pi * 1.3) * 42
-            let attach = CGPoint(x: x, y: y)
-            let length = 126 * (1 - t * 0.26) * (0.72 + p * 0.34)
-            drawPrototypeLeaf(at: attach, length: length, angle: -.pi * 0.88, color: UIColor(hex: 0x3E9E4F))
-            drawPrototypeLeaf(at: attach, length: length, angle: -.pi * 0.12, color: UIColor(hex: 0x8DCB7C))
-        }
-
-        if progress > 0.68 {
-            UIColor(hex: 0xF0A04A).setFill()
-            for petal in 0..<6 {
-                let angle = CGFloat(petal) / 6 * .pi * 2
-                let rect = CGRect(
-                    x: tip.x + cos(angle) * 44 - 27,
-                    y: tip.y + sin(angle) * 44 - 27,
-                    width: 54,
-                    height: 54
-                )
-                context.fillEllipse(in: rect)
-            }
-            UIColor(hex: 0xFFCB73).setFill()
-            context.fillEllipse(in: CGRect(x: tip.x - 22, y: tip.y - 22, width: 44, height: 44))
-        }
-    }
-
-    private func drawPrototypeLeaf(at point: CGPoint, length: CGFloat, angle: CGFloat, color: UIColor) {
-        let tip = CGPoint(x: point.x + cos(angle) * length, y: point.y + sin(angle) * length)
-        let mid = CGPoint(x: (point.x + tip.x) / 2, y: (point.y + tip.y) / 2)
-        let normal = CGPoint(x: -sin(angle), y: cos(angle))
-        let width = length * 0.36
-        let leaf = UIBezierPath()
-        leaf.move(to: point)
-        leaf.addQuadCurve(to: tip, controlPoint: CGPoint(x: mid.x + normal.x * width, y: mid.y + normal.y * width))
-        leaf.addQuadCurve(to: point, controlPoint: CGPoint(x: mid.x - normal.x * width, y: mid.y - normal.y * width))
-        color.setFill()
-        leaf.fill()
-
-        UIColor(hex: 0x16431F).withAlphaComponent(0.25).setStroke()
-        let vein = UIBezierPath()
-        vein.move(to: point)
-        vein.addLine(to: tip)
-        vein.lineWidth = 2
-        vein.stroke()
-    }
-
-    private func drawPrototypePebbles(in context: CGContext, jarRect: CGRect, frameCount: Int) {
-        let colors = [UIColor(hex: 0xD48A45), UIColor(hex: 0xF0A04A), UIColor(hex: 0xB66A32)]
-        for index in 0..<15 {
-            let seed = CGFloat((index * 37 + frameCount * 13) % 100) / 100
-            let diameter = CGFloat(34 + (index * 11) % 30)
-            let x = jarRect.minX + 72 + CGFloat((index * 83) % 520)
-            let y = jarRect.maxY - 126 - seed * 92
-            colors[index % colors.count].withAlphaComponent(0.86).setFill()
-            context.fillEllipse(in: CGRect(x: x, y: y, width: diameter, height: diameter))
-        }
-    }
-
+    @MainActor
     private func alignmentForCapture(_ image: UIImage, previousPhoto: GrowPhoto?, fallbackFrameCount: Int) -> CaptureAlignment {
         guard
             let previousPhoto,
@@ -453,6 +357,7 @@ final class PhotoService {
         }
     }
 
+    @MainActor
     private func normalizedImage(from data: Data) throws -> UIImage {
         guard let source = UIImage(data: data) else {
             throw PhotoServiceError.unreadableImage
@@ -470,6 +375,7 @@ final class PhotoService {
         }
     }
 
+    @MainActor
     private func encodedPhotoData(from image: UIImage) throws -> Data {
         guard let data = image.jpegData(compressionQuality: 0.92) else {
             throw PhotoServiceError.unableToEncodeImage
@@ -477,28 +383,19 @@ final class PhotoService {
         return data
     }
 
-    private func thumbnailData(from image: UIImage) -> Data? {
-        let maxSide: CGFloat = 420
-        let longestSide = max(image.size.width, image.size.height)
-        let scale = min(1, maxSide / max(1, longestSide))
-        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        let thumbnail = renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
-        return thumbnail.jpegData(compressionQuality: 0.76)
-    }
-
+    @MainActor
     private func writePhoto(_ data: Data, localFileName: String) throws {
         let url = photoURL(for: localFileName)
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try data.write(to: url, options: [.atomic])
     }
 
+    @MainActor
     private func photoURL(for localFileName: String) -> URL {
         AppGroup.containerURL.appendingPathComponent(localFileName)
     }
 
+    @MainActor
     private func rollbackCapture(
         _ photo: GrowPhoto,
         localFileName: String,
@@ -513,9 +410,10 @@ final class PhotoService {
         grow.currentStage = previousStage
     }
 
+    @MainActor
     private func save() throws {
         do {
-            try saveContext(context)
+            try contextSaver.save(context)
         } catch {
             #if DEBUG
             print("Grow: photo save failed: \(error)")
@@ -525,21 +423,13 @@ final class PhotoService {
     }
 }
 
-private extension UIColor {
-    convenience init(hex value: UInt32, alpha: CGFloat = 1) {
-        self.init(
-            red: CGFloat((value >> 16) & 0xFF) / 255,
-            green: CGFloat((value >> 8) & 0xFF) / 255,
-            blue: CGFloat(value & 0xFF) / 255,
-            alpha: alpha
-        )
-    }
-}
-
-enum PhotoServiceError: LocalizedError {
+enum PhotoServiceError: LocalizedError, Equatable {
     case unreadableImage
     case unableToEncodeImage
+    case unableToCreateThumbnail
     case metadataSaveFailed
+    case invalidCaptureOrigin
+    case demoLibraryUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -547,8 +437,14 @@ enum PhotoServiceError: LocalizedError {
             "Grow could not read that plant photo."
         case .unableToEncodeImage:
             "Grow could not prepare that photo for your timeline."
+        case .unableToCreateThumbnail:
+            "Grow could not prepare the timeline preview for that photo."
         case .metadataSaveFailed:
             "Grow could not save that growth memory. Please try again."
+        case .invalidCaptureOrigin:
+            "That photo source cannot be saved through this capture path."
+        case .demoLibraryUnavailable:
+            "Grow could not load the sample photo story."
         }
     }
 }

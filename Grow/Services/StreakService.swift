@@ -24,18 +24,65 @@ struct StreakUpdate: Equatable {
     }
 }
 
-@Observable
-final class StreakService {
+@MainActor
+struct StreakTransaction {
+    let state: StreakState
+    let previousCurrent: Int
+    let previousLongest: Int
+    let previousLastDate: Date?
+    let previousFreezeTokens: Int
+    let update: StreakUpdate
+
+    private let context: ModelContext
+    private let insertedState: Bool
+
+    init(
+        state: StreakState,
+        previousCurrent: Int,
+        previousLongest: Int,
+        previousLastDate: Date?,
+        previousFreezeTokens: Int,
+        update: StreakUpdate,
+        context: ModelContext,
+        insertedState: Bool
+    ) {
+        self.state = state
+        self.previousCurrent = previousCurrent
+        self.previousLongest = previousLongest
+        self.previousLastDate = previousLastDate
+        self.previousFreezeTokens = previousFreezeTokens
+        self.update = update
+        self.context = context
+        self.insertedState = insertedState
+    }
+
+    func rollback() {
+        state.currentStreak = previousCurrent
+        state.longestStreak = previousLongest
+        state.lastCareDate = previousLastDate
+        state.freezeTokensRemaining = previousFreezeTokens
+        if insertedState {
+            context.delete(state)
+        }
+    }
+}
+
+nonisolated final class StreakService: Observable {
     private let context: ModelContext
     private let calendar: Calendar
 
+    @MainActor
     init(context: ModelContext, calendar: Calendar = .current) {
         self.context = context
         self.calendar = calendar
     }
 
+    @MainActor
     func snapshot() -> StreakUpdate {
-        let state = streakState()
+        let (state, inserted) = streakState()
+        if inserted {
+            save()
+        }
         return StreakUpdate(
             current: state.currentStreak,
             longest: state.longestStreak,
@@ -46,9 +93,19 @@ final class StreakService {
     }
 
     @discardableResult
+    @MainActor
     func recordCapture(at date: Date = Date()) -> StreakUpdate {
-        let state = streakState()
+        let transaction = stageCapture(at: date)
+        save()
+        return transaction.update
+    }
+
+    @MainActor
+    func stageCapture(at date: Date = Date()) -> StreakTransaction {
+        let (state, insertedState) = streakState()
         let previous = state.currentStreak
+        let previousLongest = state.longestStreak
+        let previousLastDate = state.lastCareDate
         let previousFreezeTokens = state.freezeTokensRemaining
         var spentFreezeToken = false
 
@@ -76,29 +133,38 @@ final class StreakService {
         }
 
         state.longestStreak = max(state.longestStreak, state.currentStreak)
-        save()
-
-        return StreakUpdate(
+        let update = StreakUpdate(
             current: state.currentStreak,
             longest: state.longestStreak,
             freezeTokensRemaining: state.freezeTokensRemaining,
             didAdvance: state.currentStreak > previous || state.lastCareDate == date && previous == 0,
             spentFreezeToken: state.freezeTokensRemaining < previousFreezeTokens || spentFreezeToken
         )
+        return StreakTransaction(
+            state: state,
+            previousCurrent: previous,
+            previousLongest: previousLongest,
+            previousLastDate: previousLastDate,
+            previousFreezeTokens: previousFreezeTokens,
+            update: update,
+            context: context,
+            insertedState: insertedState
+        )
     }
 
-    private func streakState() -> StreakState {
+    @MainActor
+    private func streakState() -> (state: StreakState, inserted: Bool) {
         let descriptor = FetchDescriptor<StreakState>()
         if let existing = try? context.fetch(descriptor).first {
-            return existing
+            return (existing, false)
         }
 
         let state = StreakState()
         context.insert(state)
-        save()
-        return state
+        return (state, true)
     }
 
+    @MainActor
     private func save() {
         do {
             try context.save()

@@ -36,7 +36,7 @@ struct CaptureScreen: View {
                         isCapturing: isCapturing,
                         captureError: captureError,
                         onCamera: { isShowingCamera = true },
-                        onPrototypeCapture: { capturePrototype(grow) }
+                        onDemoCapture: { captureDemo(grow) }
                     )
                     .transition(.opacity)
                 } else {
@@ -73,7 +73,7 @@ struct CaptureScreen: View {
                     ),
                     onCapture: { data in
                         isShowingCamera = false
-                        recordImageData(data, for: grow)
+                        recordImageData(data, origin: .camera, for: grow)
                     },
                     onCancel: { isShowingCamera = false }
                 )
@@ -97,15 +97,20 @@ struct CaptureScreen: View {
         return LocalizedStringKey(displayName)
     }
 
-    private func capturePrototype(_ grow: Grow) {
-        let reward = photoService.recordPrototypeCapture(for: grow, species: catalog.species(id: grow.speciesID))
-        withAnimation(.smooth(duration: 0.5)) {
-            captureError = nil
-            lastReward = reward
+    private func captureDemo(_ grow: Grow) {
+        isCapturing = true
+        Task { @MainActor in
+            defer { isCapturing = false }
+            do {
+                let reward = try await photoService.recordDemoCapture(
+                    for: grow,
+                    species: catalog.species(id: grow.speciesID)
+                )
+                completeCapture(reward, for: grow)
+            } catch {
+                captureError = error.localizedDescription
+            }
         }
-        scheduleTomorrowReminder(for: grow)
-        syncWidgetSnapshot(for: grow, streak: reward.streak)
-        CaptureHaptics.reward()
     }
 
     private func importPhoto(_ item: PhotosPickerItem, for grow: Grow) async {
@@ -119,25 +124,38 @@ struct CaptureScreen: View {
             guard let data = try await item.loadTransferable(type: Data.self) else {
                 throw PhotoServiceError.unreadableImage
             }
-            recordImageData(data, for: grow)
+            recordImageData(data, origin: .photoLibrary, for: grow)
         } catch {
             captureError = error.localizedDescription
         }
     }
 
-    private func recordImageData(_ data: Data, for grow: Grow) {
+    private func recordImageData(
+        _ data: Data,
+        origin: GrowPhotoOrigin,
+        for grow: Grow
+    ) {
         do {
-            let reward = try photoService.recordCapture(imageData: data, for: grow, species: catalog.species(id: grow.speciesID))
-            withAnimation(.smooth(duration: 0.5)) {
-                captureError = nil
-                lastReward = reward
-            }
-            scheduleTomorrowReminder(for: grow)
-            syncWidgetSnapshot(for: grow, streak: reward.streak)
-            CaptureHaptics.reward()
+            let reward = try photoService.recordCapture(
+                imageData: data,
+                origin: origin,
+                for: grow,
+                species: catalog.species(id: grow.speciesID)
+            )
+            completeCapture(reward, for: grow)
         } catch {
             captureError = error.localizedDescription
         }
+    }
+
+    private func completeCapture(_ reward: CaptureReward, for grow: Grow) {
+        withAnimation(.smooth(duration: 0.5)) {
+            captureError = nil
+            lastReward = reward
+        }
+        scheduleTomorrowReminder(for: grow)
+        syncWidgetSnapshot(for: grow, streak: reward.streak)
+        CaptureHaptics.reward()
     }
 
     private func scheduleTomorrowReminder(for grow: Grow) {
@@ -176,7 +194,7 @@ private struct CaptureWorkspace: View {
     let isCapturing: Bool
     let captureError: String?
     var onCamera: () -> Void
-    var onPrototypeCapture: () -> Void
+    var onDemoCapture: () -> Void
 
     private var photos: [GrowPhoto] {
         (grow.photos ?? []).sorted { $0.capturedAt < $1.capturedAt }
@@ -250,7 +268,7 @@ private struct CaptureWorkspace: View {
         #if DEBUG
         guard CommandLine.arguments.contains("-simulateCaptureReward") else { return }
         try? await Task.sleep(nanoseconds: 700_000_000)
-        onPrototypeCapture()
+        onDemoCapture()
         #endif
     }
 
@@ -268,7 +286,7 @@ private struct CaptureWorkspace: View {
                 isCapturing: isCapturing,
                 showSimulatorCapture: !CameraCaptureService.isCameraAvailable,
                 onCamera: onCamera,
-                onPrototypeCapture: onPrototypeCapture
+                onDemoCapture: onDemoCapture
             )
 
             if let captureError {
@@ -385,7 +403,7 @@ private struct CaptureActionDeck: View {
     let isCapturing: Bool
     let showSimulatorCapture: Bool
     var onCamera: () -> Void
-    var onPrototypeCapture: () -> Void
+    var onDemoCapture: () -> Void
 
     var body: some View {
         VStack(spacing: GrowSpacing.sm) {
@@ -415,7 +433,7 @@ private struct CaptureActionDeck: View {
                 .accessibilityLabel("Import plant photo")
 
                 if showSimulatorCapture {
-                    Button(action: onPrototypeCapture) {
+                    Button(action: onDemoCapture) {
                         Label("Simulator", systemImage: "camera.aperture")
                             .font(GrowType.callout(.semibold))
                             .frame(maxWidth: .infinity, minHeight: 44)
@@ -424,6 +442,7 @@ private struct CaptureActionDeck: View {
                     .buttonBorderShape(.capsule)
                     .controlSize(.large)
                     .tint(GrowPalette.sprout600)
+                    .disabled(isCapturing)
                     .accessibilityLabel("Use simulator capture")
                 }
             }
